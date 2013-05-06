@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="android-core" default="dist" basedir="..">
+    <description>Build file to update the atlib.zip in res/raw.</description>
+    
+  <property name="atlib.project" location="../at2-atlib" />
+  <property name="android-core.version" value="10002220" />
+  <property name="android-core.zipfile" value="res/raw/atlib.zip" />
+  
+  <target name="dist" depends="version">
+      <zip destfile="${android-core.zipfile}">
+          <zipfileset dir="${basedir}" includes="version.at" />
+          <zipfileset dir="${atlib.project}">
+              <include name="at/" />
+              <exclude name="demo/contextwatcher/" />
+              <exclude name="demo/echoservice/" />
+              <exclude name="demo/m2mi/" />
+              <exclude name="demo/morphic/" />
+              <exclude name="demo/servicebrowser/" />
+              <exclude name="demo/tuples/" />
+              <include name="demo/" />
+	          <include name="test/" />
+	          <exclude name="**/*.class" />
+	          <exclude name="**/*.java" />
+          </zipfileset>
+      </zip>
+  </target>
+  
+  <target name="version">
+      <echo message="${android-core.version}${line.separator}" file="version.at" />
+  </target>
+</project>
