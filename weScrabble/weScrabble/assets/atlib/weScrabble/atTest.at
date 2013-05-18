@@ -1,0 +1,4 @@
+def test(){
+	Android.Log.v("weScrabble", "Hello world!");
+};
+self;
