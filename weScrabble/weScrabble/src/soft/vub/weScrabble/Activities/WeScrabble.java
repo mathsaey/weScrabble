@@ -2,10 +2,13 @@ package soft.vub.weScrabble.Activities;
 
 import soft.vub.weScrabble.R;
 import soft.vub.weScrabble.WeScrabbleAssetInstaller;
+import soft.vub.weScrabble.atInterfaces.gameLogicInterface;
 import android.app.Activity;
+import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Looper;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
@@ -15,6 +18,8 @@ import edu.vub.at.IAT;
 import edu.vub.at.android.util.IATAndroid;
 import edu.vub.at.android.util.IATSettings;
 import edu.vub.at.android.util.IATSettings.IATOptions;
+import edu.vub.at.exceptions.XIllegalOperation;
+import edu.vub.at.exceptions.XTypeMismatch;
 
 public class WeScrabble extends Activity {
 	private static IAT iat;
@@ -23,7 +28,6 @@ public class WeScrabble extends Activity {
 	private ProgressBar progressSpinner;
 	
 	public class StartIATTask extends AsyncTask<Void, String, Void> {
-
 		@Override
 		protected void onProgressUpdate(String... values) {
 			super.onProgressUpdate(values);
@@ -59,12 +63,12 @@ public class WeScrabble extends Activity {
 				//Launch the interpreter
 				this.publishProgress("Starting the AmbientTalk interpreter");
 				
-				IATOptions iatOptions = IATSettings.getIATOptions(WeScrabble.this);				
+				IATOptions iatOptions = IATSettings.getIATOptions(WeScrabble.this);			
 				iat = IATAndroid.create(WeScrabble.this, iatOptions);
 				
 				//Start code evaluation
-				this.publishProgress("Loading weScrabble code");
-				iat.evalAndPrint("import /.weScrabble.atTest.test()", System.err);
+				this.publishProgress("Launching weScrabble code");
+				//iat.evalAndPrint("import /.weScrabble.atTest.test()", System.err);
 				
 			} catch (Exception e) {
 				this.publishProgress("Failed to load ambientTalk...");
@@ -72,6 +76,10 @@ public class WeScrabble extends Activity {
 			}
 			return null;
 		}
+	}
+	
+	public void testFunc(View v) {
+
 	}
 	
 	@Override
@@ -94,4 +102,13 @@ public class WeScrabble extends Activity {
 		return true;
 	}
 
+	/**
+	 * Generate a hashed id of the device
+	 * @return a unique identifier for this device
+	 */
+	public String getDeviceID() {
+	    final TelephonyManager tm = (TelephonyManager) getBaseContext().getSystemService(Context.TELEPHONY_SERVICE);
+	    final String id = tm.getDeviceId();
+	    return Integer.toString(id.hashCode()); //Hash the id for privacy
+	}
 }

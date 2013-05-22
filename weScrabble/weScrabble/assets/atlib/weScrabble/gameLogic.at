@@ -1,0 +1,89 @@
+import /.at.lang.types;
+import /.at.support.util;
+import /.at.support.timer;
+import /.at.lang.exceptions;
+
+import ~.dictionary;
+
+deftype MaximumTeamsReached <: lobby.at.lang.types.Exception;
+def  XMaximumTeamsReached := createException(MaximumTeamsReached);
+
+def CONSTANTS := ~.constants;
+
+// Gets a random letter 
+def getRandomLetter() {
+	def idx := randomNumberBetween(1,CONSTANTS.ALPHABET.length());
+	CONSTANTS.ALPHABET[idx];
+};
+// Returns a table of length n filled with random letters
+def getRandomLetters: n {
+	def res [n];
+	n.doTimes: {|i| res[i]:=getRandomLetter()};
+	res
+};
+
+// Adds a letter to the rack (a table)
+def addLetter: letter toRack: rack {
+	rack + [letter];
+};
+// Checks if the rack currently contains a valid word
+def checkRack: rack {
+	findWord: rack.implode();
+};
+
+// Represents the game for a single player
+def player := object: { 
+	// Each player has a name
+	def name := "";
+	// The rack contains the word being formed
+	def rack := []; 
+	// The letters contain all the letters currently in play
+	def letters := getRandomLetters: CONSTANTS.LETTER_AMOUNT;	 
+};
+
+// Represents a team of players
+def team := object: {
+	// Team name
+	def name := "";
+	// Reference to every player that 
+	// the local game knows
+	def players := [];
+
+	// Add a reference to the player
+	def addPlayer: player {
+		players + [player];
+	};
+
+	// Creates a new team
+	def init(newName) {
+		name := newName
+	};
+};
+
+// Represents the entire game
+def game := object: {
+	// Every game has a unique id
+	// this id is created with the device id of the person that started the game
+	// and a milisecond timestamp of the time the game was created
+	def id := "";
+	// Contains both teams
+	def teams := [];
+
+	// Add a team to the game if there is room
+	def createTeam(name) {
+		if: teams.length >= CONSTANTS.TEAM_AMOUNT 
+		then: {
+			raise: XMaximumTeamsReached.new("This game already has enough teams!");
+		} else: {
+			teams + [team.new(name)];
+		};
+	};
+
+	// Generate a unique game ID
+	def generateID() {
+		def parent := jlobby.edu.vub.at.android.util.IATAndroid.getInstance().getParentActivity();
+		def deviceID := parent.getDeviceID();
+		def time := now().toString(); 
+		deviceID + " - " + time;
+	};
+};

@@ -1,9 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="con" path="com.android.ide.eclipse.adt.ANDROID_FRAMEWORK"/>
-	<classpathentry kind="con" path="com.android.ide.eclipse.adt.LIBRARIES"/>
+	<classpathentry exported="true" kind="con" path="com.android.ide.eclipse.adt.ANDROID_FRAMEWORK"/>
+	<classpathentry exported="true" kind="con" path="com.android.ide.eclipse.adt.LIBRARIES"/>
+	<classpathentry exported="true" kind="con" path="com.android.ide.eclipse.adt.DEPENDENCIES"/>
+	<classpathentry exported="true" kind="lib" path="/android-core/libs/ambienttalk2.jar"/>
+	<classpathentry exported="true" kind="lib" path="/android-core/libs/antlr.jar"/>
+	<classpathentry exported="true" kind="lib" path="/android-core/libs/java-getopt-1.0.13.jar"/>
+	<classpathentry exported="true" kind="lib" path="/android-core/bin/android-core.jar"/>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="gen"/>
-	<classpathentry kind="con" path="com.android.ide.eclipse.adt.ANDROID_FRAMEWORK/AssetInstaller"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>

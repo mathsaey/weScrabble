@@ -8,6 +8,7 @@ public class WeScrabbleAssetInstaller extends AssetInstaller {
 	//Ensures the assets are copied to the device
 	public WeScrabbleAssetInstaller() {
 		super();
+		development = true;
 	}
 	
 	//Installs the assets, this avoids having to use an intent to do this
