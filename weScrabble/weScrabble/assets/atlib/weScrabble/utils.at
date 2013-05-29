@@ -4,6 +4,12 @@
 
 import /.at.support.util;
 import /.at.support.timer;
+import /.at.lang.exceptions;
+
+// Exceptions
+deftype InvalidArgument <: lobby.at.lang.types.Exception;
+def  XInvalidArgument := createException(InvalidArgument);
+
 
 // Gets a random letter 
 def getRandomLetter() {
@@ -33,10 +39,10 @@ def checkRack: rack {
 // this guarantees no games can have the same id even if they are 
 // created at the exact same time.
 def generateID() {
-	def parent := jlobby.edu.vub.at.android.util.IATAndroid.getInstance().getParentActivity();
-	def deviceID := parent.getDeviceID();
+	//def parent := jlobby.edu.vub.at.android.util.IATAndroid.getInstance().getParentActivity();
+	//def deviceID := parent.getDeviceID();
 	def time := now().toString(); 
-	deviceID + "-" + time;
+	//deviceID + "-" + time;
 };
 
 self;

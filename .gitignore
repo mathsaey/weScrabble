@@ -1,5 +1,7 @@
 weScrabble/weScrabble/bin/*
 weScrabble/weScrabble/gen/*
+design/*
+
 
 *.sublime-workspace
 

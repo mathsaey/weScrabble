@@ -1,20 +1,24 @@
 import /.at.lang.types;
 import /.at.lang.exceptions;
 
-import ~.dictionary;
 import ~.utils;
 
+// Exceptions
 deftype MaximumTeamsReached <: lobby.at.lang.types.Exception;
 def  XMaximumTeamsReached := createException(MaximumTeamsReached);
+
+// Other tags
+deftype ActiveGame;
+deftype ResolvedGame;
 
 // Represents the game for a single player
 def playerGame := object: { 
 	// Each player has a name
 	def name := "";
 	// The rack contains the word being formed
-	def rack := createRack(); 
+	def rack := []; 
 	// The letters contain all the letters currently in play
-	def letters := getRandomLetters: ~.constants.LETTER_AMOUNT;
+	def letters := [];
 
 	def init(playerName) {
 		name := playerName;
@@ -23,35 +27,22 @@ def playerGame := object: {
 	}; 
 };
 
-// Represents a team of players
-def team := object: {
-	// Team name
-	def name := "";
-	// Reference to every player that 
-	// the local game knows
-	def players := [];
 
-	// Add a reference to the player
-	def addPlayer: player {
-		players + [player];
-	};
-
-	// Creates a new team
-	def init(newName) {
-		name := newName
-	};
-};
-
-// Represents the entire game
+// Represents the local version of the game
 def game := object: {
 	// identifier unique to the game
 	def id;
+	// a game can have a name
+	def name := "";
+	// Contains the name of the player
+	def playerName := "";
 	// Contains all teams
 	def teams;
 
 	def init() {
 		id := generateID();
 		teams := [];
+		self;
 	};
 
 	// Add a team to the game if there is room
@@ -72,4 +63,5 @@ def game := object: {
 	def create() {
 		self.new();
 	};
+	def getTag() {test};
 };

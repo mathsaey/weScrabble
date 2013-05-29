@@ -1,4 +1,4 @@
-package soft.vub.weScrabble.Activities;
+package soft.vub.weScrabble.activities;
 
 import edu.vub.at.exceptions.XAmbienttalk;
 import soft.vub.weScrabble.AmbientTalkManager;

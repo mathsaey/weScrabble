@@ -1,4 +1,4 @@
-package soft.vub.weScrabble.Activities;
+package soft.vub.weScrabble.activities;
 
 import soft.vub.weScrabble.AmbientTalkDidNotLaunchException;
 import soft.vub.weScrabble.AmbientTalkManager;
@@ -121,15 +121,5 @@ public class WeScrabble extends Activity {
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.activity_main, menu);
 		return false;
-	}
-	
-	/**
-	 * Generate a hashed id of the device
-	 * @return a unique identifier for this device
-	 */
-	public String getDeviceID() {
-	    final TelephonyManager tm = (TelephonyManager) getBaseContext().getSystemService(Context.TELEPHONY_SERVICE);
-	    final String id = tm.getDeviceId();
-	    return Integer.toString(id.hashCode()); //Hash the id for privacy
 	}
 }

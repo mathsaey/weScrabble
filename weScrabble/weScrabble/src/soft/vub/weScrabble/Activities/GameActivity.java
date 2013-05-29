@@ -1,4 +1,4 @@
-package soft.vub.weScrabble.Activities;
+package soft.vub.weScrabble.activities;
 
 import soft.vub.weScrabble.R;
 import android.app.Activity;

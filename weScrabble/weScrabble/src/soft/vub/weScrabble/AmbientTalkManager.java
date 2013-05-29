@@ -2,6 +2,8 @@ package soft.vub.weScrabble;
 
 import soft.vub.weScrabble.atInterfaces.GameInterface;
 import android.app.Activity;
+import android.content.Context;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import edu.vub.at.IAT;
 import edu.vub.at.android.util.IATAndroid;
@@ -73,6 +75,17 @@ public class AmbientTalkManager {
 			Log.e("AmbientTalk", "Could not start IAT", e);
 			throw new AmbientTalkDidNotLaunchException();
 		}
+	}
+	
+	/**
+	 * Generate a hashed id of the device
+	 * @return a unique identifier for this device
+	 */
+	public String getDeviceID() {
+	   // final TelephonyManager tm = (TelephonyManager) getBaseContext().getSystemService(Context.TELEPHONY_SERVICE);
+	   // final String id = tm.getDeviceId();
+	   // return Integer.toString(id.hashCode()); //Hash the id for privacy
+		return "lol";
 	}
 	
 	// Wrappers
