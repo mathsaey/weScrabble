@@ -1,6 +1,6 @@
 weScrabble/weScrabble/bin/*
 weScrabble/weScrabble/gen/*
-design/*
+design*
 
 
 *.sublime-workspace

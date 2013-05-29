@@ -1,0 +1,126 @@
+// team.at
+// Mathijs Saey
+// This file contains the implementation of the team object
+
+import ~.utils;
+
+// Tag assigned to a team object
+deftype Team;
+
+/**
+	A team represents a group of players that can collaborate.
+
+	A team has both active and resolved players, active players are 
+	still trying to get rid of some letters while resolved players are 
+	already done doing so. A team is finished once all the players are resolved.
+*/
+def team := object: {
+	// Team name
+	def name := "";
+
+	// contains all the players in the team
+	def activePlayers 	:= [];
+	def resolvedPlayers := [];
+
+	// Add a player to the team
+	def addPlayer: player {
+		activePlayers := activePlayers + [player];
+		self;
+	};
+	// Resolve a player.
+	def resolvePlayer: player {
+		resolvedPlayers := resolvedPlayers + [player];
+		activePlayers := activePlayers.filter:{|p| player != player};
+		self;
+	};
+
+	// This method updates it's player list based on the team
+	// data of another player.
+	// any new player in the active or resolved list is added.
+	def updateTeam: t {
+		if: (is: t taggedAs: Team)
+		then: {
+			foreach: { |p|
+				 if: !activePlayers.contains(p)
+				 then: {addPlayer: p};
+			} in: t.activePlayers;
+			foreach: { |p|
+				 if: !resolvedPlayers.contains(p) 
+				 then: {resolvePlayer: p};
+			} in: t.resolvedPlayers();
+		} else: {
+			raise: XInvalidArgument.new("team.updateTeam(t) received non-team argument")
+		};
+	};
+
+	// check if every member of the team finished
+	def didTeamResolve() {
+		// avoid considering an empty team as resolved by ensuring a team
+		// had at least one player before being resolved
+		activePlayers.isEmpty().and:{!resolvedPlayers.isEmpty()};
+	};
+
+	// Creates a new team
+	def init(newName) {
+		name := newName;
+		activePlayers := [];
+		resolvedPlayers := [];
+		self;
+	};
+} taggedAs: [Team];
+
+
+
+/**
+ Unit test for the team object
+ This unit test only does local testing!
+*/
+def teamUnitTest := extend: /.at.unit.test.UnitTest.new("team unit test") with: {
+
+  def testInit() {
+  	def t := team.new("testTeam!");
+  	self.assertEquals(t.activePlayers,[],"activePlayers table not empty after init!");
+  	self.assertEquals(t.resolvedPlayers,[], "resolvedPlayers not empty after init!");
+  };
+
+  def testAddPlayer() {
+  	def t := team.new("testTeam!");
+  	t.addPlayer:"test";
+  	self.assertNotEquals(t.activePlayers, [], "activePlayers empty after adding player");
+  };
+
+  def testResolvePlayer() {
+  	def t := team.new("testTeam!");
+  	self.assertFalse(t.didTeamResolve(), "team resolved before anybody played!");
+  	t.addPlayer:"test";
+  	t.resolvePlayer:"test";
+  	self.assertEquals(t.activePlayers, [], "activePlayers not empty after resolving player");
+  	self.assertNotEquals(t.resolvedPlayers, [], "resolvedPlayers empty after resolving player");
+  	self.assertTrue(t.didTeamResolve(), "didTeamResolve returned false");
+  };
+
+  def testUpdateTeam() {
+  	def t1 := team.new("testTeam 1");
+  	t1.addPlayer:"test 1";
+  	t1.addPlayer:"test 2";
+  	def t2 := clone: t1;
+
+  	self.assertEquals(t1.activePlayers,t2.activePlayers,"error while cloning teams!");
+  	self.assertEquals(t1.resolvedPlayers,t2.resolvedPlayers,"error while cloning teams!");
+  	self.assertEquals(t1.name,t2.name,"error while cloning teams!");
+
+  	t1.resolvePlayer:"test 1";
+  	t2.addPlayer:"test 3";
+
+  	self.assert: InvalidArgument raisedIn:{t1.updateTeam:""};
+
+  	t1.updateTeam: t2;
+  	t2.updateTeam: t1;
+  	self.assertTrue(t1.activePlayers.contains("test 3"));
+  	self.assertTrue(!t2.activePlayers.contains("test 1"));
+  	self.assertTrue(t2.resolvedPlayers.contains("test 1"));
+  }
+};
+
+//teamUnitTest.runTest();
+team;
