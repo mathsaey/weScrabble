@@ -10,7 +10,6 @@ import /.at.lang.exceptions;
 deftype InvalidArgument <: lobby.at.lang.types.Exception;
 def  XInvalidArgument := createException(InvalidArgument);
 
-
 // Gets a random letter 
 def getRandomLetter() {
 	def idx := randomNumberBetween(1, ~.constants.ALPHABET.length());

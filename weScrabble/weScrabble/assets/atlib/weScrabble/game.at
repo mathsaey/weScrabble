@@ -5,7 +5,6 @@
 
 import /.at.lang.exceptions;
 import /.at.lang.types;
-import ~.utils;
 
 // Exceptions
 deftype MaximumTeamsReached <: lobby.at.lang.types.Exception;
@@ -38,7 +37,7 @@ def game := object: {
 	// Checks if any of the teams finished the game
 	def didGameEnd() {
 		teams.inject: false into: {|accum, e| accum.or:{e.didTeamResolve()}}
-	}
+	};
 
 	// Add a team to the game if there is room
 	def addTeam(name) {
