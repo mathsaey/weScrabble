@@ -1,0 +1,42 @@
+// utils.at
+// Mathijs Saey
+// This file contains general functions used throughout the game code
+
+import /.at.support.util;
+import /.at.support.timer;
+
+// Gets a random letter 
+def getRandomLetter() {
+	def idx := randomNumberBetween(1, ~.constants.ALPHABET.length());
+	~.constants.ALPHABET[idx];
+};
+// Returns a table of length n filled with random letters
+def getRandomLetters: n {
+	def res [n];
+	n.doTimes: {|i| res[i]:=getRandomLetter()};
+	res
+};
+
+// Create an empty rack
+def createRack() {[]};
+// Adds a letter to the rack (a table)
+def addLetter: letter toRack: rack {
+	rack + [letter];
+};
+// Checks if the rack currently contains a valid word
+def checkRack: rack {
+	findWord: rack.implode();
+};
+
+// Generate a unique ID
+// the unique id is made out of the device id and a timestamp.
+// this guarantees no games can have the same id even if they are 
+// created at the exact same time.
+def generateID() {
+	def parent := jlobby.edu.vub.at.android.util.IATAndroid.getInstance().getParentActivity();
+	def deviceID := parent.getDeviceID();
+	def time := now().toString(); 
+	deviceID + "-" + time;
+};
+
+self;

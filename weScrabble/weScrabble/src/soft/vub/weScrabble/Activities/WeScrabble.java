@@ -1,33 +1,45 @@
 package soft.vub.weScrabble.Activities;
 
+import soft.vub.weScrabble.AmbientTalkDidNotLaunchException;
+import soft.vub.weScrabble.AmbientTalkManager;
 import soft.vub.weScrabble.R;
-import soft.vub.weScrabble.WeScrabbleAssetInstaller;
-import soft.vub.weScrabble.atInterfaces.gameLogicInterface;
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Looper;
 import android.telephony.TelephonyManager;
-import android.util.Log;
 import android.view.Menu;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import edu.vub.at.IAT;
-import edu.vub.at.android.util.IATAndroid;
-import edu.vub.at.android.util.IATSettings;
-import edu.vub.at.android.util.IATSettings.IATOptions;
-import edu.vub.at.exceptions.XIllegalOperation;
-import edu.vub.at.exceptions.XTypeMismatch;
 
-public class WeScrabble extends Activity {
-	private static IAT iat;
+/**
+ * This is the first activity users see,
+ * it loads ambienttalk and afterwards, it allows the users
+ * to decide if they want to play a new game or join an existing one
+ * 
+ * @author mathsaey
+ *  */
+public class WeScrabble extends Activity {	
 	
+	// UI Variables
+	private Button joinButton;
+	private Button createButton;
 	private TextView progressText;
 	private ProgressBar progressSpinner;
 	
+	/**
+	 * Task responsible for starting the AT interpreter and 
+	 * loading the assets 
+	 * 
+	 * @author mathsaey
+	 */
 	public class StartIATTask extends AsyncTask<Void, String, Void> {
+		boolean didLoad = false;
+		
 		@Override
 		protected void onProgressUpdate(String... values) {
 			super.onProgressUpdate(values);
@@ -43,8 +55,14 @@ public class WeScrabble extends Activity {
 		@Override
 		protected void onPostExecute(Void result) {
 			super.onPostExecute(result);
-			progressText.setText("Done!");
 			progressSpinner.setVisibility(View.INVISIBLE);
+			
+			if (didLoad) {
+				progressText.setText("Done!");
+				joinButton.setEnabled(true);
+				createButton.setEnabled(true);
+			}
+			
 		}
 
 		@Override
@@ -53,55 +71,58 @@ public class WeScrabble extends Activity {
 				Looper.prepare();
 				
 				//Install the ambienttalk assets
-				this.publishProgress("Installing AmbientTalk Assets");
+				this.publishProgress("Installing AmbientTalk and assets...");
+				AmbientTalkManager.getSharedManager().installAndLaunchAT(WeScrabble.this);
+				didLoad = true;
 				
-				if (iat == null) {
-					WeScrabbleAssetInstaller installer = new WeScrabbleAssetInstaller();
-					installer.launch(WeScrabble.this);
-				}
-				
-				//Launch the interpreter
-				this.publishProgress("Starting the AmbientTalk interpreter");
-				
-				IATOptions iatOptions = IATSettings.getIATOptions(WeScrabble.this);			
-				iat = IATAndroid.create(WeScrabble.this, iatOptions);
-				
-				//Start code evaluation
-				this.publishProgress("Launching weScrabble code");
-				//iat.evalAndPrint("import /.weScrabble.atTest.test()", System.err);
-				
-			} catch (Exception e) {
-				this.publishProgress("Failed to load ambientTalk...");
-				Log.e("AmbientTalk", "Could not start IAT", e);
+			} catch (AmbientTalkDidNotLaunchException e) {
+				this.publishProgress("Failed to load ambientTalk :(");
 			}
 			return null;
 		}
 	}
 	
-	public void testFunc(View v) {
-
-	}
-	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
-		StartIATTask task;
-		
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
+		joinButton = (Button) findViewById(R.id.joinGameButton);
+		createButton = (Button) findViewById(R.id.createGameButton);
 		progressText = (TextView) findViewById(R.id.progressText);
 		progressSpinner = (ProgressBar) findViewById(R.id.progressBar);
 		
-		task = new StartIATTask();	
+		joinButton.setEnabled(false);
+		createButton.setEnabled(false);
+				
+		//Start ambienttalk
+		StartIATTask task = new StartIATTask();	
 		task.execute();
-	}
+		}
 
+	/**
+	 * This method is called by the system when the
+	 * create game button is pressed
+	 * @param v
+	 */
+	public void createButtonOnClick(View v) {
+		Intent intent = new Intent(this, CreateGameActivity.class);
+		startActivity(intent);
+	}
+	
+	/**
+	 * This method is called by the system when the
+	 * join game button is pressed
+	 * @param v
+	 */
+	public void joinButtonOnClick(View v) {}
+	
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.activity_main, menu);
-		return true;
+		return false;
 	}
-
+	
 	/**
 	 * Generate a hashed id of the device
 	 * @return a unique identifier for this device

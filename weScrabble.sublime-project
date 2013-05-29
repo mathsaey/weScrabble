@@ -1,0 +1,18 @@
+{
+	"folders":
+	[
+		{
+			"name":"AmbientTalk source",
+			"path":"./weScrabble/weScrabble/assets/atlib/weScrabble"
+		},
+		{
+			"name":"java source",
+			"path":"./weScrabble/weScrabble/src/soft/vub/weScrabble"	
+		},
+		{
+			"name":"root",
+			"folder_exclude_patterns":["weScrabble"],
+			"path": "."
+		}
+	]
+}
