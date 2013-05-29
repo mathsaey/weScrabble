@@ -116,6 +116,16 @@ public class WeScrabble extends Activity {
 	 */
 	public void joinButtonOnClick(View v) {}
 	
+	/**
+	 * Generate a hashed id of the device
+	 * @return a unique identifier for this device
+	 */
+	public String getDeviceID() {
+	    final TelephonyManager tm = (TelephonyManager) getBaseContext().getSystemService(Context.TELEPHONY_SERVICE);
+	    final String id = tm.getDeviceId();
+	    return Integer.toString(id.hashCode()); //Hash the id for privacy
+	}
+	
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu; this adds items to the action bar if it is present.
