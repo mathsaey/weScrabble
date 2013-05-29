@@ -1,0 +1,56 @@
+// game.at
+// Mathijs Saey
+// This file contains the implementation of the game object
+// and it's subclasses
+
+import /.at.lang.exceptions;
+import /.at.lang.types;
+import ~.utils;
+
+// Exceptions
+deftype MaximumTeamsReached <: lobby.at.lang.types.Exception;
+def  XMaximumTeamsReached := createException(MaximumTeamsReached);
+
+// Tags assigned to the game hierarchy
+// ActiveGame represents the game where the player still has one or
+// more letters left, any player can join an active game.
+// A resolved game represents a game where the player has used all of his/her letters
+// no player can join a game via a resolved game 
+// (you can only join a game through a player who's game is active)
+// this guarantees that once somebody's game is resolved, you can effectively rule out
+// that player when determining the final outcome of the game.
+deftype Game;
+deftype ActiveGame <: Game;
+deftype ResolvedGame <: Game;
+
+/**
+	A game represents the global state of the game stored by all players
+*/
+def game := object: {
+	// Unique identifier of the game
+	def id := "";
+	// Name chosen by the person that started the game
+	// does not need to be unique
+	def name;
+	// Contains all the teams
+	def teams;
+
+	// Checks if any of the teams finished the game
+	def didGameEnd() {
+		teams.inject: false into: {|accum, e| accum.or:{e.didTeamResolve()}}
+	}
+
+	// Add a team to the game if there is room
+	def addTeam(name) {
+		if: teams.length >= ~.constants.TEAM_AMOUNT 
+		then: {
+			raise: XMaximumTeamsReached.new("This game already has enough teams!");
+		} else: {
+			teams := teams + [team.new(name)];
+		};
+	};
+	// Creates a team for each entry in a table
+	def addTeams(names) {
+		foreach: {|t| addTeam(t)} in: names;
+	};
+} taggedAs: [Game];
