@@ -6,5 +6,10 @@ package soft.vub.weScrabble.atInterfaces;
  */
 public interface TeamInterface {
 	public String name();
-	public PlayerGameInterface[] players();
+
+	public TeamInterface init(String name);
+	
+	public PlayerGameInterface[] allPlayers();
+	public PlayerGameInterface[] activePlayers();
+	public PlayerGameInterface[] resolvedPlayers();
 }

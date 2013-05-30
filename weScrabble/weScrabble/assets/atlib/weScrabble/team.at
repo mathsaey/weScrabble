@@ -11,9 +11,9 @@ def  XInvalidArgument := createException(InvalidArgument);
 // Tag assigned to a team object
 deftype Team;
 
-/**********************
- ** Object Definition *
- **********************/
+/*********************
+ * Object Definition *
+ *********************/
 
 /**
 	A team represents a group of players that can collaborate.
@@ -30,6 +30,11 @@ def team := object: {
 	def activePlayers 	:= [];
 	def resolvedPlayers := [];
 
+	// Returns all the players of a team
+	def allPlayers() {
+		activePlayers + resolvedPlayers;
+	};
+
 	// Add a player to the team
 	def addPlayer: player {
 		activePlayers := activePlayers + [player];
@@ -38,7 +43,7 @@ def team := object: {
 	// Resolve a player.
 	def resolvePlayer: player {
 		resolvedPlayers := resolvedPlayers + [player];
-		activePlayers := activePlayers.filter:{|p| player != player};
+		activePlayers := activePlayers.filter:{|p| p != player};
 		self;
 	};
 
@@ -78,9 +83,9 @@ def team := object: {
 	};
 } taggedAs: [Team];
 
-/***************
- ** Unit Tests *
- ***************/
+/**************
+ * Unit Tests *
+ **************/
 
 /**
  Unit test for the team object
@@ -110,6 +115,18 @@ def teamUnitTest := extend: /.at.unit.test.UnitTest.new("team unit test") with: 
   	self.assertTrue(t.didTeamResolve(), "didTeamResolve returned false");
   };
 
+  def testAllPlayers() {
+  	def t := team.new("testTeam!");
+  	self.assertEquals(t.allPlayers(), [], "allPlayers should return empty table!");
+  	t.addPlayer:"test 1";
+  	t.addPlayer:"test 2";
+  	t.resolvePlayer:"test 3";
+
+  	self.assertTrue(t.allPlayers().contains("test 1"), "Player 1 missing in allPlayers");
+  	self.assertTrue(t.allPlayers().contains("test 2"), "Player 2 missing in allPlayers");
+  	self.assertTrue(t.allPlayers().contains("test 3"), "Player 3 missing in allPlayers");
+  };
+
   def testUpdateTeam() {
   	def t1 := team.new("testTeam 1");
   	t1.addPlayer:"test 1";
@@ -132,5 +149,3 @@ def teamUnitTest := extend: /.at.unit.test.UnitTest.new("team unit test") with: 
   	self.assertTrue(t2.resolvedPlayers.contains("test 1"));
   }
 };
-
-team;

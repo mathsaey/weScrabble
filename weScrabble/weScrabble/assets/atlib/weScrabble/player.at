@@ -6,13 +6,15 @@ import /.at.lang.types;
 import /.at.support.util;
 import /.at.support.timer;
 
+// Type tags assigned to the different
+// player objects
 deftype Player;
 deftype ActivePlayer <: Player;
 deftype ResolvedPlayer <: Player;
 
-/**********************
- ** Utility Functions *
- **********************/
+/*********************
+ * Utility Functions *
+ *********************/
 
 // Gets a random letter 
 def getRandomLetter() {
@@ -47,11 +49,11 @@ def generateID() {
 };
 
 /**********************
- ** Object Definition *
+ * Object Definitions *
  **********************/
 
 /*
- A player instance represents the game state of a single player 
+ A player object represents the game state of a single player 
  of the game. 
 */
 def player := object: {
@@ -59,32 +61,45 @@ def player := object: {
 	def name;
 	// idx of the team the player is in.
 	def teamIdx;
+	// pointer to the game object
+	def game;
 
-	def init(playerName, teamidx) {
-		name := playerName;
-		teamIdx := teamidx;
+	def init(name, teamIdx, game) {
+		self.game := game;
+		self.name := name;
+		self.teamIdx := teamIdx;
 	};
 } taggedAs: [Player];
 
+/**
+ An activePlayer object represents a player currently still playing
+ the game, on top of the regular data, it also stores the rack and letters
+*/
 def activePlayer := extend: player with: {
 	// The rack is the table that contains the word being formed
 	def rack := [];
 	// The letters is a table containing the letters the player still has to use
 	def letters := [];
 
-	def init(playerName, teamidx) {
-		super^init(playerName,teamidx);
-		rack := createRack();
-		letters := getRandomLetters: ~.constants.LETTER_AMOUNT;
+	def init(playerName, teamIdx) {
+		super^init(playerName,teamIdx);
+		self.rack := createRack();
+		self.letters := getRandomLetters: ~.constants.LETTER_AMOUNT;
 	};
 } taggedAs: [ActivePlayer];
 
+/**
+ A resolved player object represents a player that used all his letters
+ it is created from an active player object, and uses the same super slot.
+ Resolved players can no longer participate in the game an new players cannot
+ join a game through a player that already finished playing.
+*/
 def resolvedPlayer := extend: player with: {
 	// the resolvetime represents when the game was resolved
 	def resolveTime;
 
 	def init(activePlayer) {
 		super := activePlayer.super;
-		//TODO add a reliable resolve time
+		//TODO add a reliable resolve time => lengte spel in tijd
 	};
 } taggedAs: [ResolvedPlayer];
