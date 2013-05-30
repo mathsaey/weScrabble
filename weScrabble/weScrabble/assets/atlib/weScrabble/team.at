@@ -2,10 +2,18 @@
 // Mathijs Saey
 // This file contains the implementation of the team object
 
-import ~.utils;
+import /.at.lang.exceptions;
+
+// Exceptions
+deftype InvalidArgument <: lobby.at.lang.types.Exception;
+def  XInvalidArgument := createException(InvalidArgument);
 
 // Tag assigned to a team object
 deftype Team;
+
+/**********************
+ ** Object Definition *
+ **********************/
 
 /**
 	A team represents a group of players that can collaborate.
@@ -51,6 +59,7 @@ def team := object: {
 		} else: {
 			raise: XInvalidArgument.new("team.updateTeam(t) received non-team argument")
 		};
+		self;
 	};
 
 	// check if every member of the team finished
@@ -69,7 +78,9 @@ def team := object: {
 	};
 } taggedAs: [Team];
 
-
+/***************
+ ** Unit Tests *
+ ***************/
 
 /**
  Unit test for the team object
@@ -122,5 +133,4 @@ def teamUnitTest := extend: /.at.unit.test.UnitTest.new("team unit test") with: 
   }
 };
 
-//teamUnitTest.runTest();
 team;

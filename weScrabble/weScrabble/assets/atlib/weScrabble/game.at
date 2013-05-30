@@ -1,7 +1,6 @@
 // game.at
 // Mathijs Saey
 // This file contains the implementation of the game object
-// and it's subclasses
 
 import /.at.lang.exceptions;
 import /.at.lang.types;
@@ -21,6 +20,8 @@ def  XMaximumTeamsReached := createException(MaximumTeamsReached);
 deftype Game;
 deftype ActiveGame <: Game;
 deftype ResolvedGame <: Game;
+
+// TODO: team idx opslagen
 
 /**
 	A game represents the global state of the game stored by all players

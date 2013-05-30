@@ -1,0 +1,90 @@
+// player.at
+// Mathijs Saey
+// This file contains the implementation of the player object
+
+import /.at.lang.types;
+import /.at.support.util;
+import /.at.support.timer;
+
+deftype Player;
+deftype ActivePlayer <: Player;
+deftype ResolvedPlayer <: Player;
+
+/**********************
+ ** Utility Functions *
+ **********************/
+
+// Gets a random letter 
+def getRandomLetter() {
+	def idx := randomNumberBetween(1, ~.constants.ALPHABET.length());
+	~.constants.ALPHABET[idx];
+};
+// Returns a table of length n filled with random letters
+def getRandomLetters: n {
+	def res [n];
+	n.doTimes: {|i| res[i]:=getRandomLetter()};
+	res
+};
+// Create an empty rack
+def createRack() {[]};
+// Adds a letter to the rack (a table)
+def addLetter: letter toRack: rack {
+	rack + [letter];
+};
+// Checks if the rack currently contains a valid word
+def checkRack: rack {
+	findWord: rack.implode();
+};
+// Generate a unique ID
+// the unique id is made out of the device id and a timestamp.
+// this guarantees no games can have the same id even if they are 
+// created at the exact same time.
+def generateID() {
+	//def parent := jlobby.edu.vub.at.android.util.IATAndroid.getInstance().getParentActivity();
+	//def deviceID := parent.getDeviceID();
+	def time := now().toString(); 
+	//deviceID + "-" + time;
+};
+
+/**********************
+ ** Object Definition *
+ **********************/
+
+/*
+ A player instance represents the game state of a single player 
+ of the game. 
+*/
+def player := object: {
+	// Name of the player 
+	def name;
+	// idx of the team the player is in.
+	def teamIdx;
+
+	def init(playerName, teamidx) {
+		name := playerName;
+		teamIdx := teamidx;
+	};
+} taggedAs: [Player];
+
+def activePlayer := extend: player with: {
+	// The rack is the table that contains the word being formed
+	def rack := [];
+	// The letters is a table containing the letters the player still has to use
+	def letters := [];
+
+	def init(playerName, teamidx) {
+		super^init(playerName,teamidx);
+		rack := createRack();
+		letters := getRandomLetters: ~.constants.LETTER_AMOUNT;
+	};
+} taggedAs: [ActivePlayer];
+
+def resolvedPlayer := extend: player with: {
+	// the resolvetime represents when the game was resolved
+	def resolveTime;
+
+	def init(activePlayer) {
+		super := activePlayer.super;
+		//TODO add a reliable resolve time
+	};
+} taggedAs: [ResolvedPlayer];
