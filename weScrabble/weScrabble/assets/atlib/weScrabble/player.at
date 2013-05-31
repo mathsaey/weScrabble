@@ -4,7 +4,6 @@
 
 import /.at.lang.types;
 import /.at.support.util;
-import /.at.support.timer;
 
 // Type tags assigned to the different
 // player objects
@@ -35,17 +34,7 @@ def addLetter: letter toRack: rack {
 };
 // Checks if the rack currently contains a valid word
 def checkRack: rack {
-	findWord: rack.implode();
-};
-// Generate a unique ID
-// the unique id is made out of the device id and a timestamp.
-// this guarantees no games can have the same id even if they are 
-// created at the exact same time.
-def generateID() {
-	//def parent := jlobby.edu.vub.at.android.util.IATAndroid.getInstance().getParentActivity();
-	//def deviceID := parent.getDeviceID();
-	def time := now().toString(); 
-	//deviceID + "-" + time;
+	~.dictionary.findWord: rack.implode();
 };
 
 /**********************
@@ -61,13 +50,17 @@ def player := object: {
 	def name;
 	// idx of the team the player is in.
 	def teamIdx;
-	// pointer to the game object
-	def game;
 
-	def init(name, teamIdx, game) {
-		self.game := game;
+	def init(name, teamIdx) {
 		self.name := name;
 		self.teamIdx := teamIdx;
+		self;
+	};
+
+	// Checks if the game can still be joined
+	// only true for active players
+	def canJoinGame() {
+		false;
 	};
 } taggedAs: [Player];
 
@@ -85,7 +78,13 @@ def activePlayer := extend: player with: {
 		super^init(playerName,teamIdx);
 		self.rack := createRack();
 		self.letters := getRandomLetters: ~.constants.LETTER_AMOUNT;
+		self;
 	};
+
+	def canJoinGame() {
+		true;
+	};
+
 } taggedAs: [ActivePlayer];
 
 /**
@@ -100,6 +99,35 @@ def resolvedPlayer := extend: player with: {
 
 	def init(activePlayer) {
 		super := activePlayer.super;
-		//TODO add a reliable resolve time => lengte spel in tijd
+		self.resolveTime := 1;
+		self;
 	};
 } taggedAs: [ResolvedPlayer];
+
+/**************
+ * Unit Tests *
+ **************/
+
+/**
+ Unit test for the player objects
+ This unit test only does local testing!
+*/
+def playerUnitTest := extend: /.at.unit.test.UnitTest.new("player unit test") with: {
+	def testInit() {
+		def p := activePlayer.new("test", 1);
+		self.assertNotNil(p.letters());
+		self.assertNotNil(resolvedPlayer.init(p).resolveTime());
+	};
+
+	def testJoin() {
+		self.assertTrue(activePlayer.canJoinGame());
+		self.assertFalse(resolvedPlayer.canJoinGame());
+	};
+
+	def testCheckRack() {
+		self.assertTrue(checkRack:["t","r","u","e"]);
+		self.assertFalse(checkRack:["m","a","t","h","i","j","s"]);
+	};
+};
+
+self;

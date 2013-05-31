@@ -2,31 +2,26 @@
 // Mathijs Saey
 // This file contains the implementation of the game object
 
-import /.at.lang.exceptions;
-import /.at.lang.types;
+//import /.at.lang.exceptions;
+//import /.at.lang.types;
+import ~.player;
+import ~.team;
 
 // Exceptions
 deftype MaximumTeamsReached <: lobby.at.lang.types.Exception;
 def  XMaximumTeamsReached := createException(MaximumTeamsReached);
 
-// Tags assigned to the game hierarchy
-// ActiveGame represents the game where the player still has one or
-// more letters left, any player can join an active game.
-// A resolved game represents a game where the player has used all of his/her letters
-// no player can join a game via a resolved game 
-// (you can only join a game through a player who's game is active)
-// this guarantees that once somebody's game is resolved, you can effectively rule out
-// that player when determining the final outcome of the game.
+// Tag representing a game
 deftype Game;
-deftype ActiveGame <: Game;
-deftype ResolvedGame <: Game;
 
-// TODO: team idx opslagen
+/*********************
+ * Object Definition *
+ *********************/
 
 /**
 	A game represents the global state of the game stored by all players
 */
-def game := object: {
+def game := isolate: {
 	// Unique identifier of the game
 	def id := "";
 	// Name chosen by the person that started the game
@@ -34,14 +29,42 @@ def game := object: {
 	def name;
 	// Contains all the teams
 	def teams;
+	// Reference to the local player
+	def localPlayer;
+
+	// Initialise the game, 
+	def init(name, teamNames, localPlayer) {
+		self.teams := [];
+		self.name := name;
+		self.id := generateID();
+		self.addTeams: teamNames;
+		self.localPlayer := localPlayer;
+
+		teams[localPlayer.teamIdx()].addPlayer: localPlayer;
+		self;
+	};
+
+	// Creates a copy of the game, with a different
+	// local player, used when people join a game.
+	def newPlayerInstance(player, teamIdx) {
+		teams[teamIdx].addPlayer: player;
+		def newInstance := clone: self;
+		newInstance.localPlayer := player;
+		newInstance;
+	};
 
 	// Checks if any of the teams finished the game
 	def didGameEnd() {
 		teams.inject: false into: {|accum, e| accum.or:{e.didTeamResolve()}}
 	};
 
+	// Checks if 2 games are the same by matching id's
+	def ==(other) {
+		self.id == other.id;
+	};
+
 	// Add a team to the game if there is room
-	def addTeam(name) {
+	def addTeam: name {
 		if: teams.length >= ~.constants.TEAM_AMOUNT 
 		then: {
 			raise: XMaximumTeamsReached.new("This game already has enough teams!");
@@ -50,7 +73,47 @@ def game := object: {
 		};
 	};
 	// Creates a team for each entry in a table
-	def addTeams(names) {
-		foreach: {|t| addTeam(t)} in: names;
+	def addTeams: names {
+		foreach: {|t| addTeam: t} in: names;
 	};
+
+	// Generate a unique ID
+	// the unique id is made out of the device id and a timestamp.
+	// this guarantees no games can have the same id even if they are 
+	// created at the exact same time.
+	def generateID() {
+		//def parent := jlobby.edu.vub.at.android.util.IATAndroid.getInstance().getParentActivity();
+		//def deviceID := parent.getDeviceID();
+		def time := /.at.support.timer.now().toString(); 
+		//deviceID + "-" + time;
+	};
+
 } taggedAs: [Game];
+
+/**************
+ * Unit Tests *
+ **************/
+
+/**
+ Unit test for the game object
+ This unit test only does local testing!
+*/
+def gameUnitTest := extend: /.at.unit.test.UnitTest.new("game unit test") with: {
+	def testP1 := activePlayer.new("testPlayer 1", 1);
+	def testP2 := activePlayer.new("testPlayer 2", 2);
+	def testGame := game.init("testGame", ["red", "blue"], testP1);
+
+	def testInit() {
+		self.assertNotNil(testGame.id());
+		self.assertNotNil(testGame.name());
+		self.assertNotNil(testGame.teams());
+		self.assertNotNil(testGame.localPlayer());
+	};
+
+	def testNewInstance() {
+		def test := testGame.newPlayerInstance(testP2,2);
+		self.assertNotEquals(testGame.localPlayer(), test.localPlayer());
+	};
+};
+
+self;

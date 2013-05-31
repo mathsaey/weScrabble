@@ -22,13 +22,21 @@ deftype Team;
 	still trying to get rid of some letters while resolved players are 
 	already done doing so. A team is finished once all the players are resolved.
 */
-def team := object: {
+def team := isolate: {
 	// Team name
 	def name := "";
 
 	// contains all the players in the team
 	def activePlayers 	:= [];
 	def resolvedPlayers := [];
+
+	// Creates a new team
+	def init(newName) {
+		name := newName;
+		activePlayers := [];
+		resolvedPlayers := [];
+		self;
+	};
 
 	// Returns all the players of a team
 	def allPlayers() {
@@ -72,14 +80,6 @@ def team := object: {
 		// avoid considering an empty team as resolved by ensuring a team
 		// had at least one player before being resolved
 		activePlayers.isEmpty().and:{!resolvedPlayers.isEmpty()};
-	};
-
-	// Creates a new team
-	def init(newName) {
-		name := newName;
-		activePlayers := [];
-		resolvedPlayers := [];
-		self;
 	};
 } taggedAs: [Team];
 
@@ -149,3 +149,5 @@ def teamUnitTest := extend: /.at.unit.test.UnitTest.new("team unit test") with: 
   	self.assertTrue(t2.resolvedPlayers.contains("test 1"));
   }
 };
+
+self;
