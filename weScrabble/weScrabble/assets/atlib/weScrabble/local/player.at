@@ -5,6 +5,9 @@
 import /.at.lang.types;
 import /.at.support.util;
 
+import ~.constants;
+import ~.dictionary;
+
 // Type tags assigned to the different
 // player objects
 deftype Player;
@@ -17,8 +20,8 @@ deftype ResolvedPlayer <: Player;
 
 // Gets a random letter 
 def getRandomLetter() {
-	def idx := randomNumberBetween(1, ~.constants.ALPHABET.length());
-	~.constants.ALPHABET[idx];
+	def idx := randomNumberBetween(1, CONSTANTS.ALPHABET.length());
+	CONSTANTS.ALPHABET[idx];
 };
 // Returns a table of length n filled with random letters
 def getRandomLetters: n {
@@ -31,10 +34,6 @@ def createRack() {[]};
 // Adds a letter to the rack (a table)
 def addLetter: letter toRack: rack {
 	rack + [letter];
-};
-// Checks if the rack currently contains a valid word
-def checkRack: rack {
-	~.dictionary.findWord: rack.implode();
 };
 
 /**********************
@@ -77,12 +76,17 @@ def activePlayer := extend: player with: {
 	def init(playerName, teamIdx) {
 		super^init(playerName,teamIdx);
 		self.rack := createRack();
-		self.letters := getRandomLetters: ~.constants.LETTER_AMOUNT;
+		self.letters := getRandomLetters: CONSTANTS.LETTER_AMOUNT;
 		self;
 	};
 
 	def canJoinGame() {
 		true;
+	};
+
+	// Checks if the rack currently contains a valid word
+	def checkRack: rack {
+		findWord: rack.implode();
 	};
 
 } taggedAs: [ActivePlayer];
@@ -104,30 +108,16 @@ def resolvedPlayer := extend: player with: {
 	};
 } taggedAs: [ResolvedPlayer];
 
-/**************
- * Unit Tests *
- **************/
 
-/**
- Unit test for the player objects
- This unit test only does local testing!
-*/
-def playerUnitTest := extend: /.at.unit.test.UnitTest.new("player unit test") with: {
-	def testInit() {
-		def p := activePlayer.new("test", 1);
-		self.assertNotNil(p.letters());
-		self.assertNotNil(resolvedPlayer.init(p).resolveTime());
-	};
+/***************
+ * Export List *
+ ***************/
 
-	def testJoin() {
-		self.assertTrue(activePlayer.canJoinGame());
-		self.assertFalse(resolvedPlayer.canJoinGame());
-	};
-
-	def testCheckRack() {
-		self.assertTrue(checkRack:["t","r","u","e"]);
-		self.assertFalse(checkRack:["m","a","t","h","i","j","s"]);
-	};
+object: {
+	def player := player; 
+	def Player := Player; 
+	def activePlayer := activePlayer;
+	def ActivePlayer := ActivePlayer; 
+	def resolvedPlayer := resolvedPlayer; 
+	def ResolvedPlayer := ResolvedPlayer
 };
-
-self;

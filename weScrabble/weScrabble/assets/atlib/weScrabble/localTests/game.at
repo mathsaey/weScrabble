@@ -1,0 +1,36 @@
+// game.at
+// Mathijs Saey
+// This file contains the implementation of the game unit tests
+
+// It's worth noting that these tests (and in fact all the tests in localTests folder)
+// only perform testing from a local point of view.
+
+// only works when the atlib is given to the shell as root folder
+// from the weScrabble folder: $ iat localTests/game.at -o root=../
+
+import /.root.weScrabble.local.game;
+import /.root.weScrabble.local.player;
+
+def gameUnitTest := extend: /.at.unit.test.UnitTest.new("game unit test") with: {
+	def testP1 := activePlayer.new("testPlayer 1", 1);
+	def testP2 := activePlayer.new("testPlayer 2", 2);
+	def testGame := game.init("testGame", ["red", "blue"], testP1);
+
+	def testInit() {
+		self.assertNotNil(testGame.id());
+		self.assertNotNil(testGame.name());
+		self.assertNotNil(testGame.teams());
+		self.assertNotNil(testGame.localPlayer());
+	};
+
+	def testNewInstance() {
+		def test := testGame.newPlayerInstance(testP2);
+		self.assertNotEquals(testGame.localPlayer(), test.localPlayer());
+	};
+};
+
+gameUnitTest.runTest();
+
+object: { 
+	def gameUnitTest := gameUnitTest;
+};

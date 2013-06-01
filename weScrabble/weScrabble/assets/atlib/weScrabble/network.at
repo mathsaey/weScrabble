@@ -1,20 +1,21 @@
 import /.at.lang.futures;
-import ~.game;
+
+import ~.local.game;
+import ~.local.team;
+import ~.local.player;
 
 /**
 TODO: 
-	- game implementatie files naar aparte map verplaatsen
 	- game.newPlayerInstance naar netwerk code verplaatsen
 	- generale code maken om games te importeren
 	- games mergen
 */
 
-
 /*************       
  * Exporter  *
  *************/
 def exp := object: { 
-	def localPlayer := player.new("Vinz",1);
+	def localPlayer := activePlayer.new("Vinz",1);
 	def game := game.new("VinzGame!", ["Vinzteam!", "not vinz team :("], localPlayer);
 
 	def export() {
@@ -27,13 +28,13 @@ def exp := object: {
  *************/
 
  def imp := object: { 
- 	def localPlayer := player.new("Kenny", 2);
+ 	def localPlayer := activePlayer.new("Kenny", 2);
  	def joinedGame;
 
  	def join() {
  		whenever: Game discovered: {|game| 
  			system.println("Game discovered");
- 			joinedGame := game<-newPlayerInstance(localPlayer,localPlayer.teamIdx())@TwoWay;
+ 			joinedGame := game<-newPlayerInstance(localPlayer)@TwoWay;
  			when: joinedGame becomes: {|game|
  				system.println("Game resolved");
  				joinedGame := game;

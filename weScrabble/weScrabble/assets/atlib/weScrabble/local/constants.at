@@ -2,6 +2,8 @@
 // Mathijs Saey
 // This file contains the constants used throughout the code
 
+def CONSTANTS := object: { 
+
 // Letters of the alphabet
 def ALPHABET := ["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z"];
 // Amount of letters a player starts with
@@ -9,4 +11,9 @@ def LETTER_AMOUNT := 5;
 // Amount of teams the game has
 def TEAM_AMOUNT := 2;
 
-self;
+};
+
+// Export list
+object: {
+	def CONSTANTS := CONSTANTS
+};
