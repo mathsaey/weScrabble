@@ -23,9 +23,9 @@ def gameUnitTest := extend: /.at.unit.test.UnitTest.new("game unit test") with: 
 		self.assertNotNil(testGame.localPlayer());
 	};
 
-	def testNewInstance() {
-		def test := testGame.newPlayerInstance(testP2);
-		self.assertNotEquals(testGame.localPlayer(), test.localPlayer());
+	def testAddPlayer() {
+		testGame.addPlayer: testP2 withIdx: 2;
+		self.assertTrue(testGame.teams[2].activePlayers[1] == testP2);
 	};
 };
 

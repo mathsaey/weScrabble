@@ -24,7 +24,7 @@ deftype ResolvedGame <: Game;
 /**
 	A game represents the global state of the game stored by all players
 */
-def game := isolate: {
+def game := object: {
 	// Unique identifier of the game
 	def id := "";
 	// Name chosen by the person that started the game
@@ -47,18 +47,18 @@ def game := isolate: {
 		self;
 	};
 
-	// Creates a copy of the game, with a different
-	// local player, used when people join a game.
-	def newPlayerInstance(player) {
-		teams[player.teamIdx()].addPlayer: player;
-		def newInstance := clone: self;
-		newInstance.localPlayer := player;
-		newInstance;
+	def addPlayer: playerRef withIdx: idx {
+		self.teams[idx].addPlayer: playerRef;
 	};
 
 	// Checks if any of the teams finished the game
 	def didGameEnd() {
 		teams.inject: false into: {|accum, e| accum.or:{e.didTeamResolve()}}
+	};
+
+	// Checks if the local player finished his/her game.
+	def canJoinGame() {
+		self.localPlayer.canJoinGame();
 	};
 
 	// Checks if 2 games are the same by matching id's
@@ -99,5 +99,7 @@ def game := isolate: {
 
  object: { 
 	def game := game;
-	def Game := Game; 
+	def Game := Game;
+	def ActiveGame := ActiveGame;
+	def ResolvedGame := ResolvedGame; 
 };

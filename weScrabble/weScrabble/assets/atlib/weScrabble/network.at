@@ -1,47 +1,9 @@
-import /.at.lang.futures;
-
-import ~.local.game;
-import ~.local.team;
-import ~.local.player;
 
 /**
 TODO: 
-	- game.newPlayerInstance naar netwerk code verplaatsen
-	- generale code maken om games te importeren
-	- games mergen
+	structuur:
+		- importer file die instaat om games te zoeken als geen game actief is
+		- exporter die huidige spel altijd uitzend voor joinen
+		- merger die andere spellen met zelfde id zoekt en merget
 */
 
-/*************       
- * Exporter  *
- *************/
-def exp := object: { 
-	def localPlayer := activePlayer.new("Vinz",1);
-	def game := game.new("VinzGame!", ["Vinzteam!", "not vinz team :("], localPlayer);
-
-	def export() {
-		export: game as: Game;
-	};
-};
-
-/*************       
- * Importer  *
- *************/
-
- def imp := object: { 
- 	def localPlayer := activePlayer.new("Kenny", 2);
- 	def joinedGame;
-
- 	def join() {
- 		whenever: Game discovered: {|game| 
- 			system.println("Game discovered");
- 			joinedGame := game<-newPlayerInstance(localPlayer)@TwoWay;
- 			when: joinedGame becomes: {|game|
- 				system.println("Game resolved");
- 				joinedGame := game;
- 			};
- 		};
- 	};
- };
-
-network.online();
-self;
