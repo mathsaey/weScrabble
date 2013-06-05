@@ -1,0 +1,91 @@
+// importer.at
+// Mathijs Saey
+// The import module is responsible for finding and joining games.
+
+// TODO: should contain a way to ensure player got added to remote game
+
+import /.at.lang.exceptions;
+import /.at.lang.futures;
+
+import /.weScrabble.local.game;
+import /.weScrabble.local.team;
+import /.weScrabble.local.player;
+
+// Exceptions
+deftype InvalidIndexEception <: lobby.at.lang.types.Exception;
+def  XInvalidIndexEception := createException(InvalidIndexEception);
+
+/*************       
+ * Importer  *
+ *************/
+
+def importer := object: {
+	def joinableGames := [];
+	def subscription;
+
+ 	def joinGame(idx, localPlayer) {
+ 		def resGame := clone: game;
+ 		def gameRef := joinableGames[idx];
+ 		resGame.localPlayer := localPlayer;
+
+ 		if: gameRef = 0 then: {
+ 			raise: XInvalidIndexEception.new("No valid player found at idx " + idx);
+ 		};
+
+ 		def futureID := gameRef<-id()@TwoWay;
+ 		def futureName := gameRef<-name()@TwoWay;
+ 		def futureTeams := gameRef<-teams()@TwoWay;
+
+ 		when: futureID 		becomes: {|id| resGame.id := id};
+ 		when: futureName 	becomes: {|n| resGame.name := n};
+ 		when: futureTeams 	becomes: {|t| resGame.teams := t;
+ 			resGame.teams[localPlayer.teamIdx()].addPlayer: player;
+ 		};
+
+ 		// Add local player to local and remote game
+ 		gameRef<-addPlayer: localPlayer withIdx: localPlayer.teamIdx();
+ 		resGame;
+ 	};
+
+ 	def search() {
+ 		if: subscription == nil then: {
+ 			subscription := whenever: ActiveGame discovered: { 
+ 				|game|
+ 				def nameF := game<-name()@TwoWay;
+ 				def name;
+
+ 				system.println("Game discovered!");
+
+ 				def idx := joinableGames.find: {|e| e == 0};
+
+ 				if: idx == nil then: {
+ 					joinableGames := joinableGames + [game];
+ 					idx := joinableGames.length;
+ 					} else: {
+ 						joinableGames[idx] := game;
+ 					};
+
+ 				when: nameF becomes: {|n|
+ 					system.println("name: " + n);
+ 				name := n;
+ 				};
+
+ 				when: game disconnected: {
+ 					system.println(name + " disconnected");
+ 					joinableGames[idx] := 0;
+ 				};
+ 			};
+ 		};
+ 	};
+
+ 	def cancelSearch() {
+ 		if: subscription != nil then: {
+ 		 	subscription.cancel();
+ 		 	subscription := nil;
+ 		 }; 
+ 	}
+};
+
+object: {
+	def importer := importer;
+};

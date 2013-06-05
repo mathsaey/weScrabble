@@ -10,9 +10,12 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Looper;
 import android.telephony.TelephonyManager;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.Menu;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -28,6 +31,7 @@ public class WeScrabble extends Activity {
 	// UI Variables
 	private Button joinButton;
 	private Button createButton;
+	private TextView playerName; 
 	private TextView progressText;
 	private ProgressBar progressSpinner;
 	
@@ -58,9 +62,8 @@ public class WeScrabble extends Activity {
 			progressSpinner.setVisibility(View.INVISIBLE);
 			
 			if (didLoad) {
-				progressText.setText("Done!");
-				joinButton.setEnabled(true);
-				createButton.setEnabled(true);
+				progressText.setText("Please enter your name");
+				playerName.setVisibility(View.VISIBLE);
 			}
 			
 		}
@@ -85,18 +88,38 @@ public class WeScrabble extends Activity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		
 		setContentView(R.layout.activity_main);
+		playerName = (TextView) findViewById(R.id.nameField);
 		joinButton = (Button) findViewById(R.id.joinGameButton);
-		createButton = (Button) findViewById(R.id.createGameButton);
 		progressText = (TextView) findViewById(R.id.progressText);
+		createButton = (Button) findViewById(R.id.createGameButton);
 		progressSpinner = (ProgressBar) findViewById(R.id.progressBar);
 		
 		joinButton.setEnabled(false);
 		createButton.setEnabled(false);
+		playerName.setVisibility(View.INVISIBLE);
 				
 		//Start ambienttalk
 		StartIATTask task = new StartIATTask();	
 		task.execute();
+		
+		// We only allow the player to continue after entering a name
+		playerName.addTextChangedListener(new TextWatcher() {
+			
+			@Override
+			public void onTextChanged(CharSequence s, int start, int before, int count) {}
+			@Override
+			public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+			
+			@Override
+			public void afterTextChanged(Editable s) {	
+				AmbientTalkManager m = AmbientTalkManager.getSharedManager();
+				m.setCoreInterface(m.getCoreInterface().init(playerName.getText().toString()));
+				
+				joinButton.setEnabled(true);
+				createButton.setEnabled(true);
+			}});
 		}
 
 	/**
@@ -114,7 +137,10 @@ public class WeScrabble extends Activity {
 	 * join game button is pressed
 	 * @param v
 	 */
-	public void joinButtonOnClick(View v) {}
+	public void joinButtonOnClick(View v) {
+		Intent intent = new Intent(this, JoinGameActivity.class);
+		startActivity(intent);
+	}
 	
 	/**
 	 * Generate a hashed id of the device

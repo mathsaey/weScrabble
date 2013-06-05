@@ -1,0 +1,57 @@
+// localCore.at
+// Mathijs Saey
+// The local core object is the general file that imports the different network 
+// and local modules and calls them when necessary, it also contains the 
+// local instance of the active game.
+
+import ~.local.game;
+import ~.local.team;
+import ~.local.player;
+
+import ~.network.exporter;
+import ~.network.importer;
+
+/*********
+ * Core  *
+ *********/
+
+def core := object: { 
+	def currentGame;
+	def localPlayer;
+
+	// Initialises the core with the player name
+	def init(playerName) {
+		// The player that creates a game
+		// always starts on the first team
+		// the idx is modified, if the player joins a game instead
+		self.localPlayer := activePlayer.new(playerName,1);
+		self;
+	};
+
+	def startGame(gameName, teamNames) {
+		// Use the device id as unique identifier.
+		//def parent := jlobby.edu.vub.at.android.util.IATAndroid.getInstance().getParentActivity();
+		//def deviceID := parent.getDeviceID();
+		def deviceID := "tmp";
+		self.currentGame := game.new(gameName, teamNames, localPlayer, deviceID);
+		self.exportGame();
+		self;
+	};
+	def exportGame() {
+		exporter.export(currentGame);
+	};
+
+	def getJoinableGames() {
+		importer.search();
+		importer.joinableGames();
+	};
+	def joinGame(gameIdx, teamIdx) {
+		self.localPlayer.teamIdx = teamIdx;
+		currentGame := importer.joinGame(idx, self.localPlayer);
+	};
+};
+
+network.online();
+object: { 
+	def core := core; 
+};

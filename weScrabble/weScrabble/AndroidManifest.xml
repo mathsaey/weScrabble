@@ -32,6 +32,7 @@
         
        <activity android:name=".WeScrabbleAssetInstaller" android:screenOrientation="portrait" android:configChanges="keyboard|keyboardHidden|orientation"></activity>
        <activity android:name="soft.vub.weScrabble.activities.CreateGameActivity"></activity>
+       <activity android:name="soft.vub.weScrabble.activities.JoinGameActivity"></activity>
        <activity android:name="soft.vub.weScrabble.activities.GameActivity"></activity>
     </application>
 

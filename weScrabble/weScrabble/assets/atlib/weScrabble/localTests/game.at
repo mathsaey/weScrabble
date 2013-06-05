@@ -14,7 +14,7 @@ import /.root.weScrabble.local.player;
 def gameUnitTest := extend: /.at.unit.test.UnitTest.new("game unit test") with: {
 	def testP1 := activePlayer.new("testPlayer 1", 1);
 	def testP2 := activePlayer.new("testPlayer 2", 2);
-	def testGame := game.init("testGame", ["red", "blue"], testP1);
+	def testGame := game.init("testGame", ["red", "blue"], testP1, "testId");
 
 	def testInit() {
 		self.assertNotNil(testGame.id());

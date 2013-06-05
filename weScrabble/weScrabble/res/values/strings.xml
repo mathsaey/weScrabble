@@ -9,5 +9,8 @@
     <string name="button_start">Start!</string>
     <string name="team0_default_name">red</string>
     <string name="team1_default_name">blue</string>
+    <string name="team_names">Team names:</string>
+    <string name="game_name">game name:</string>
+    <string name="name">name</string>
 
 </resources>

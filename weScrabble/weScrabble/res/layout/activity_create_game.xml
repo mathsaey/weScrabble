@@ -12,28 +12,55 @@
         android:layout_centerHorizontal="true"
         android:text="@string/button_start" />
 
-    <EditText
-        android:id="@+id/team0Name"
-        android:hint="@string/team0_default_name"
-        android:gravity="left"
+    <TextView
+        android:id="@+id/teamNamesTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_toLeftOf="@+id/start_button"
-        android:ems="10" >
-
-        <requestFocus />
-    </EditText>
+        android:layout_centerHorizontal="true"
+        android:text="@string/team_names"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
 
     <EditText
         android:id="@+id/team1Name"
-        android:hint="@string/team1_default_name"
-        android:gravity="right"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
-        android:layout_alignParentTop="true"
+        android:layout_below="@+id/teamNamesTitle"
         android:layout_toRightOf="@+id/start_button"
-        android:ems="10" />
+        android:ems="10"
+        android:gravity="right"
+        android:hint="@string/team1_default_name" />
+
+    <EditText
+        android:id="@+id/team0Name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/team1Name"
+        android:layout_alignBottom="@+id/team1Name"
+        android:layout_toLeftOf="@+id/start_button"
+        android:ems="10"
+        android:gravity="left"
+        android:hint="@string/team0_default_name" />
+
+    <EditText
+        android:id="@+id/gameName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/gameNameTitle"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="50dp"
+        android:ems="10"
+        android:gravity="center"
+        android:hint="@string/app_name" />
+
+    <TextView
+        android:id="@+id/gameNameTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/teamNamesTitle"
+        android:layout_below="@+id/team1Name"
+        android:layout_marginTop="35dp"
+        android:text="@string/game_name"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
 
 </RelativeLayout>

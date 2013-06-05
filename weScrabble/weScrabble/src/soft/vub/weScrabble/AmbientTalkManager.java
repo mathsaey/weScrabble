@@ -1,6 +1,6 @@
 package soft.vub.weScrabble;
 
-import soft.vub.weScrabble.atInterfaces.GameInterface;
+import soft.vub.weScrabble.atInterfaces.CoreInterface;
 import android.app.Activity;
 import android.util.Log;
 import edu.vub.at.IAT;
@@ -19,6 +19,7 @@ import edu.vub.at.exceptions.XTypeMismatch;
 public class AmbientTalkManager {
 	// Ivars
 	private static AmbientTalkManager sharedManager;
+	private CoreInterface core;
 	private IAT iat;
 	
 	// Singleton Pattern & initialization methods
@@ -65,26 +66,37 @@ public class AmbientTalkManager {
 			}
 	
 			//Launch the interpreter
-			IATOptions iatOptions = IATSettings.getIATOptions(a);			
+			IATOptions iatOptions = IATSettings.getIATOptions(a);
+			iatOptions.networkName_ = "weScrabble"; 
 			IAT iat = IATAndroid.create(a, iatOptions);
 			this.iat = iat;
-
+			
+			loadCoreInterface();
+			
 		} catch (Exception e) {
 			Log.e("AmbientTalk", "Could not start IAT", e);
 			throw new AmbientTalkDidNotLaunchException();
 		}
 	}
 	
-	// Wrappers
-	public GameInterface getGameInterface() {
+	private void loadCoreInterface() {
 		try {
-			return (GameInterface) iat.evalAndWrap("/.weScrabble.gameLogic", GameInterface.class);
+			core = (CoreInterface) iat.evalAndWrap("/.weScrabble.localCore.core", CoreInterface.class);
 		} catch (XTypeMismatch e) {
 			e.printStackTrace();
-			return null;
 		} catch (XIllegalOperation e) {
 			e.printStackTrace();
-			return null;
 		}
+	}
+		
+	public CoreInterface getCoreInterface() {
+		if (core == null) {
+			loadCoreInterface();
+		}
+		return core;
+	}
+	
+	public void setCoreInterface(CoreInterface core) {
+		this.core = core;
 	}
 }

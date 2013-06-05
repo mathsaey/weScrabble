@@ -36,10 +36,10 @@ def game := object: {
 	def localPlayer;
 
 	// Initialise the game, 
-	def init(name, teamNames, localPlayer) {
+	def init(name, teamNames, localPlayer, deviceID) {
 		self.teams := [];
 		self.name := name;
-		self.id := generateID();
+		self.id := generateID(deviceID);
 		self.addTeams: teamNames;
 		self.localPlayer := localPlayer;
 
@@ -84,11 +84,9 @@ def game := object: {
 	// the unique id is made out of the device id and a timestamp.
 	// this guarantees no games can have the same id even if they are 
 	// created at the exact same time.
-	def generateID() {
-		//def parent := jlobby.edu.vub.at.android.util.IATAndroid.getInstance().getParentActivity();
-		//def deviceID := parent.getDeviceID();
+	def generateID(deviceID) {
 		def time := /.at.support.timer.now().toString(); 
-		//deviceID + "-" + time;
+		deviceID + "-" + time;
 	};
 
 } taggedAs: [Game];
