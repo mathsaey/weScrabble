@@ -24,6 +24,7 @@ def export(game) {
 	} else: {
 		subscription := export: game as: ResolvedGame;
 	};
+	nil;
 };
 
 /***************

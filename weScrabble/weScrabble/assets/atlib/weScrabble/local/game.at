@@ -31,7 +31,7 @@ def game := object: {
 	// does not need to be unique
 	def name;
 	// Contains all the teams
-	def teams;
+	def teams := [];
 	// Reference to the local player
 	def localPlayer;
 

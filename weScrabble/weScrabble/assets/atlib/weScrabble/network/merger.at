@@ -13,6 +13,7 @@ import /.weScrabble.local.team;
  **********/
 
  def merger := object: { 
+ 	def subscriptions := [];
  	def id;
 
  	def init(id) {
@@ -21,23 +22,27 @@ import /.weScrabble.local.team;
  	};
 
  	def runUpdater(core) {
+ 		subscriptions := subscriptions + [
  		whenever: Game discovered: { |game|
- 			system.println("\n merger discovered game");
  			def futureID := game<-id()@TwoWay;
 
+	 		subscriptions := subscriptions + [
  			when: futureID becomes: {|id|
  				if: id == core.currentGame.id then: {
+ 					system.println("MERGER: merger discovered game");
  					def futureTeams := game<-teams()@TwoWay;
 
+	 				subscriptions := subscriptions + [
  					when: futureTeams becomes: {|teams|
  						teams.length.doTimes: { |idx|
  							system.println("merging: " + teams[idx].name);
  							core.currentGame.teams[idx].updateTeam: teams[idx];
  						}
- 					}
+ 					}]
  				};
- 			}
- 		}
+ 			}]
+ 		}];
+ 		nil;
  	};
  };
 

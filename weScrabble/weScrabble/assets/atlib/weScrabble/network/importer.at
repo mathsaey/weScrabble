@@ -50,7 +50,7 @@ def importer := object: {
  		when: futureID 		becomes: {|id| resGame.id := id};
  		when: futureName 	becomes: {|n| resGame.name := n};
  		when: futureTeams 	becomes: {|t| resGame.teams := t;
- 			resGame.teams[localPlayer.teamIdx()].addPlayer: player;
+ 			resGame.teams[localPlayer.teamIdx()].addPlayer: localPlayer;
  		};
 
  		// Add localplayer to the remote game 
@@ -67,20 +67,20 @@ def importer := object: {
  	def search() {
  		// Ensure we only have one active search going
  		if: subscriptions == [] then: {
- 			system.println("Searching...");
+ 			system.println("IMPORTER: Searching...");
 
  			// When discovering a game, ensure we haven't stored it before
  			subscriptions := subscriptions + [
  			whenever: ActiveGame discovered: { |game|
  			if:  !games.contains(game) then: {
- 				system.println("New game discovered!");
+ 				system.println("IMPORTER: New game discovered!");
  				def nameF := game<-name()@TwoWay;
  				def name;
  				def idx;
 
  				when: nameF becomes: {|n|
  					name := n;
- 					system.println("name: " + n);
+ 					system.println("IMPORTER: name: " + n);
  					gameNames := gameNames + [name];
  					games := games + [game];
  					idx := games.length;
@@ -89,9 +89,9 @@ def importer := object: {
  				subscriptions := subscriptions + [
  				whenever: game reconnected: {
  					if: name == nil then: {
- 						system.println("unkown game reconnected");
+ 						system.println("IMPORTER: unkown game reconnected");
  					} else: {
- 						system.println(name + " reconnected");
+ 						system.println("IMPORTER: " + name + " reconnected");
  						gameNames[idx] := name;
  					};
  					games[idx] := game;
@@ -100,9 +100,9 @@ def importer := object: {
  				subscriptions := subscriptions + [
  				whenever: game disconnected: {
  					if: name == nil then: {
- 						system.println("unkown game disconnected");
+ 						system.println("IMPORTER: unkown game disconnected");
  					} else: {
- 						system.println(name + " disconnected");
+ 						system.println("IMPORTER: " + name + " disconnected");
  						gameNames[idx] := gameNames[idx] + " <Disconnected>";
  						games[idx] := 0;
  					};

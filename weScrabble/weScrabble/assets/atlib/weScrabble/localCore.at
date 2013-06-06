@@ -12,6 +12,8 @@ import ~.network.merger;
 import ~.network.exporter;
 import ~.network.importer;
 
+import /.at.lang.futures;
+
 /*********
  * Core  *
  *********/
@@ -19,6 +21,10 @@ import ~.network.importer;
 def core := object: { 
 	def currentGame;
 	def localPlayer;
+
+	/************
+	 * External *
+	 ************/
 
 	// Initialises the core with the player name
 	def init(playerName) {
@@ -30,15 +36,20 @@ def core := object: {
 	};
 
 	// Start a new game
-	def startGame(gameName, teamNames) {
+	def createGame(gameName, teamNames) {
 		// Use the device id as unique identifier.
 		//def parent := jlobby.edu.vub.at.android.util.IATAndroid.getInstance().getParentActivity();
 		//def deviceID := parent.getDeviceID();
 		def deviceID := "tmp";
 		self.currentGame := game.new(gameName, teamNames, localPlayer, deviceID);
-		self.exportGame();
-		self.runUpdater();
-		self;
+		self.startGame();
+	};
+
+	// Join a game (if it's in range)
+	def joinGame(gameIdx, teamIdx) {
+		localPlayer.teamIdx := teamIdx;
+		currentGame := importer.joinGame(gameIdx, self.localPlayer);
+		self.startGame();
 	};
 
 	// Get the names of the games that are in range
@@ -47,12 +58,23 @@ def core := object: {
 		importer.gameNames();
 	};
 
-	// Join a game (if it's in range)
-	def joinGame(gameIdx, teamIdx) {
-		localPlayer.teamIdx := teamIdx;
-		currentGame := importer.joinGame(gameIdx, self.localPlayer);
+	// Forces reexporting the game,
+	// this will cause any currently connected
+	// game to re-merge with this one.
+	def refresh() {
 		self.exportGame();
-		self.runUpdater();
+	};
+
+	/********
+	 * Util *
+	 ********/
+
+	// Starts the necessary services
+	// after the game has been joined/created
+	def startGame() {
+		self.runUpdater;
+		self.exportGame;
+		self;
 	};
 
 	// Export the current game
@@ -67,15 +89,32 @@ def core := object: {
 		merger.runUpdater(self);
 	};
 
-	// debug
+	/*********
+	 * Debug *
+	 *********/
+
 	def exD() {
 		self.init("Mathijs");
-		self.startGame("Awesome game", ["FUCK YEAH MATHIJS", "ander team"]);
+		self.createGame("Awesome game", ["FUCK YEAH MATHIJS", "ander team"]);
 	};
 	def inD(name) {
 		self.init(name);
 		self.getGameNames();
-	}
+	};
+
+	def dGetPlayers() {
+		system.println(currentGame.teams[1].activePlayers);
+		system.println(currentGame.teams[2].activePlayers);
+	};
+
+	def dGetNames(team) {
+ 		foreach: { |p|
+ 			 def fut := p<-name()@TwoWay;
+ 			 when: fut becomes: { |n|
+ 			 	system.println(n);
+ 			 }
+ 		} in: team.activePlayers;
+ 	};
 };
 
 // Debug

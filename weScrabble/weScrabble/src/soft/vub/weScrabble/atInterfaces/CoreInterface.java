@@ -28,7 +28,7 @@ public interface CoreInterface {
 	 * @return the initialized game
 	 * @throws XAmbienttalk thrown when too many team names are supplied
 	 */
-	public CoreInterface startGame(String gameName, String[] teamNames) throws XAmbienttalk;
+	public CoreInterface createGame(String gameName, String[] teamNames) throws XAmbienttalk;
 	
 	/**
 	 * Returns an array containing all the games that can be joined
