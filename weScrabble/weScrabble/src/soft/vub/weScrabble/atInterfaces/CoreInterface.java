@@ -1,5 +1,6 @@
 package soft.vub.weScrabble.atInterfaces;
 
+import android.widget.ArrayAdapter;
 import edu.vub.at.exceptions.XAmbienttalk;
 
 public interface CoreInterface {
@@ -33,7 +34,7 @@ public interface CoreInterface {
 	 * Returns an array containing all the games that can be joined
 	 * @return array with all the games in range.
 	 */
-	public GameInterface[] getJoinableGames();
+	public String[] getGameNames();
 	
 	/**
 	 * join a game in progress

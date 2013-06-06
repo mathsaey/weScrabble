@@ -17,9 +17,9 @@ deftype Game;
 deftype ActiveGame <: Game;
 deftype ResolvedGame <: Game;
 
-/*********************
- * Object Definition *
- *********************/
+/********
+ * Game *
+ ********/
 
 /**
 	A game represents the global state of the game stored by all players

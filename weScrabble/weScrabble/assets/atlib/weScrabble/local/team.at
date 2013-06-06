@@ -11,9 +11,9 @@ def  XInvalidArgument := createException(InvalidArgument);
 // Tag assigned to a team object
 deftype Team;
 
-/*********************
- * Object Definition *
- *********************/
+/********
+ * Team *
+ ********/
 
 /**
 	A team represents a group of players that can collaborate.

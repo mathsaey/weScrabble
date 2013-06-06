@@ -36,9 +36,9 @@ def addLetter: letter toRack: rack {
 	rack + [letter];
 };
 
-/**********************
- * Object Definitions *
- **********************/
+/**********
+ * Player *
+ **********/
 
 /*
  A player object represents the game state of a single player 
@@ -88,6 +88,11 @@ def activePlayer := extend: player with: {
 	def checkRack: rack {
 		findWord: rack.implode();
 	};
+
+	// Debug
+	def test() {
+		system.println("ding!");
+	}
 
 } taggedAs: [ActivePlayer];
 

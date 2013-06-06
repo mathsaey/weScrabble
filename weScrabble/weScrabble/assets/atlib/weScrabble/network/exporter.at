@@ -4,23 +4,32 @@
 
 import /.weScrabble.local.game;
 
-/*************
- * Exporter  *
- *************/
+/************
+ * Exporter *
+ ************/
 
-def exporter := object: { 
-	// We export an active game as a game anybody can join
-	// a normal game is exported as a game that can be used for merging.
-	def export(game) {
-		if: game.canJoinGame() then: {
-			export: game as: ActiveGame;
-		} else: {
-			export: game as: ResolvedGame;
-		};
+// We export an active game as a game anybody can join
+// a normal game is exported as a game that can be used for merging.
+def export(game) {
+	def subscription;
+
+	// Ensure we only have one active export
+	if: subscription != nil then: {
+		subscription.cancel();
+	};
+
+	system.println("Exporting " + game.name());
+	if: game.canJoinGame() then: {
+		subscription := export: game as: ActiveGame;
+	} else: {
+		subscription := export: game as: ResolvedGame;
 	};
 };
 
+/***************
+ * Export List *
+ ***************/
 
-object: {
-	def exporter := exporter
+object: { 
+	def export := &export; 
 };

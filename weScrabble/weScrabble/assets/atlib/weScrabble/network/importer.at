@@ -2,8 +2,6 @@
 // Mathijs Saey
 // The import module is responsible for finding and joining games.
 
-// TODO: should contain a way to ensure player got added to remote game
-
 import /.at.lang.exceptions;
 import /.at.lang.futures;
 
@@ -15,76 +13,108 @@ import /.weScrabble.local.player;
 deftype InvalidIndexEception <: lobby.at.lang.types.Exception;
 def  XInvalidIndexEception := createException(InvalidIndexEception);
 
-/*************       
- * Importer  *
- *************/
+/************       
+ * Importer *
+ ************/
 
 def importer := object: {
-	def joinableGames := [];
-	def subscription;
+	def subscriptions := [];
+	def gameNames := [];
+	def games := [];
 
+	// Cancels all current subscriptions
+	def endSearch() {
+ 		foreach: { |s|
+ 			 s.cancel();
+ 		} in: subscriptions;
+ 		subscriptions := [];
+ 	};
+
+ 	// Join game at index
  	def joinGame(idx, localPlayer) {
  		def resGame := clone: game;
- 		def gameRef := joinableGames[idx];
+ 		def gameRef := games[idx];
  		resGame.localPlayer := localPlayer;
 
- 		if: gameRef = 0 then: {
+ 		//Ensure the game is currently reachable
+ 		if: gameRef == 0 then: {
  			raise: XInvalidIndexEception.new("No valid player found at idx " + idx);
  		};
 
+ 		// Get some data about the remote game
  		def futureID := gameRef<-id()@TwoWay;
  		def futureName := gameRef<-name()@TwoWay;
  		def futureTeams := gameRef<-teams()@TwoWay;
 
+ 		// Store the remote data once possible
  		when: futureID 		becomes: {|id| resGame.id := id};
  		when: futureName 	becomes: {|n| resGame.name := n};
  		when: futureTeams 	becomes: {|t| resGame.teams := t;
  			resGame.teams[localPlayer.teamIdx()].addPlayer: player;
  		};
 
- 		// Add local player to local and remote game
+ 		// Add localplayer to the remote game 
+ 		// TODO: should contain a way to ensure player got added to remote game
  		gameRef<-addPlayer: localPlayer withIdx: localPlayer.teamIdx();
+
+ 		// Stop looking for new games
+ 		self.endSearch();
+
  		resGame;
  	};
 
+ 	// Start looking for available games
  	def search() {
- 		if: subscription == nil then: {
- 			subscription := whenever: ActiveGame discovered: { 
- 				|game|
+ 		// Ensure we only have one active search going
+ 		if: subscriptions == [] then: {
+ 			system.println("Searching...");
+
+ 			// When discovering a game, ensure we haven't stored it before
+ 			subscriptions := subscriptions + [
+ 			whenever: ActiveGame discovered: { |game|
+ 			if:  !games.contains(game) then: {
+ 				system.println("New game discovered!");
  				def nameF := game<-name()@TwoWay;
  				def name;
-
- 				system.println("Game discovered!");
-
- 				def idx := joinableGames.find: {|e| e == 0};
-
- 				if: idx == nil then: {
- 					joinableGames := joinableGames + [game];
- 					idx := joinableGames.length;
- 					} else: {
- 						joinableGames[idx] := game;
- 					};
+ 				def idx;
 
  				when: nameF becomes: {|n|
+ 					name := n;
  					system.println("name: " + n);
- 				name := n;
+ 					gameNames := gameNames + [name];
+ 					games := games + [game];
+ 					idx := games.length;
  				};
 
- 				when: game disconnected: {
- 					system.println(name + " disconnected");
- 					joinableGames[idx] := 0;
- 				};
- 			};
+ 				subscriptions := subscriptions + [
+ 				whenever: game reconnected: {
+ 					if: name == nil then: {
+ 						system.println("unkown game reconnected");
+ 					} else: {
+ 						system.println(name + " reconnected");
+ 						gameNames[idx] := name;
+ 					};
+ 					games[idx] := game;
+ 				}];
+
+ 				subscriptions := subscriptions + [
+ 				whenever: game disconnected: {
+ 					if: name == nil then: {
+ 						system.println("unkown game disconnected");
+ 					} else: {
+ 						system.println(name + " disconnected");
+ 						gameNames[idx] := gameNames[idx] + " <Disconnected>";
+ 						games[idx] := 0;
+ 					};
+ 				}];
+ 			}}];
  		};
  	};
-
- 	def cancelSearch() {
- 		if: subscription != nil then: {
- 		 	subscription.cancel();
- 		 	subscription := nil;
- 		 }; 
- 	}
 };
+
+/***************
+ * Export List *
+ ***************/
 
 object: {
 	def importer := importer;

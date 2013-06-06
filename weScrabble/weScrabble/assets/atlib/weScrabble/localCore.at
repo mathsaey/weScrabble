@@ -8,6 +8,7 @@ import ~.local.game;
 import ~.local.team;
 import ~.local.player;
 
+import ~.network.merger;
 import ~.network.exporter;
 import ~.network.importer;
 
@@ -28,6 +29,7 @@ def core := object: {
 		self;
 	};
 
+	// Start a new game
 	def startGame(gameName, teamNames) {
 		// Use the device id as unique identifier.
 		//def parent := jlobby.edu.vub.at.android.util.IATAndroid.getInstance().getParentActivity();
@@ -35,23 +37,54 @@ def core := object: {
 		def deviceID := "tmp";
 		self.currentGame := game.new(gameName, teamNames, localPlayer, deviceID);
 		self.exportGame();
+		self.runUpdater();
 		self;
 	};
-	def exportGame() {
-		exporter.export(currentGame);
+
+	// Get the names of the games that are in range
+	def getGameNames() {
+		importer.search();
+		importer.gameNames();
 	};
 
-	def getJoinableGames() {
-		importer.search();
-		importer.joinableGames();
-	};
+	// Join a game (if it's in range)
 	def joinGame(gameIdx, teamIdx) {
-		self.localPlayer.teamIdx = teamIdx;
-		currentGame := importer.joinGame(idx, self.localPlayer);
+		localPlayer.teamIdx := teamIdx;
+		currentGame := importer.joinGame(gameIdx, self.localPlayer);
+		self.exportGame();
+		self.runUpdater();
 	};
+
+	// Export the current game
+	// recalling this serves as a refresh
+	// (when changing tags)
+	def exportGame() {
+		export(currentGame);
+	};
+
+	// Looks for other games and merges with them
+	def runUpdater() {
+		merger.runUpdater(self);
+	};
+
+	// debug
+	def exD() {
+		self.init("Mathijs");
+		self.startGame("Awesome game", ["FUCK YEAH MATHIJS", "ander team"]);
+	};
+	def inD(name) {
+		self.init(name);
+		self.getGameNames();
+	}
 };
 
+// Debug
 network.online();
+
+/***************
+ * Export List *
+ ***************/
+
 object: { 
 	def core := core; 
 };

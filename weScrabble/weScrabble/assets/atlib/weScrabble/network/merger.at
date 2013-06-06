@@ -1,0 +1,50 @@
+// merger.at
+// Mathijs Saey
+// The import module is responsible for updating both games
+// when 2 players meet each other
+
+import /.at.lang.futures;
+
+import /.weScrabble.local.game;
+import /.weScrabble.local.team;
+
+/**********
+ * Merger *
+ **********/
+
+ def merger := object: { 
+ 	def id;
+
+ 	def init(id) {
+ 		self.id := id;
+ 		self;
+ 	};
+
+ 	def runUpdater(core) {
+ 		whenever: Game discovered: { |game|
+ 			system.println("\n merger discovered game");
+ 			def futureID := game<-id()@TwoWay;
+
+ 			when: futureID becomes: {|id|
+ 				if: id == core.currentGame.id then: {
+ 					def futureTeams := game<-teams()@TwoWay;
+
+ 					when: futureTeams becomes: {|teams|
+ 						teams.length.doTimes: { |idx|
+ 							system.println("merging: " + teams[idx].name);
+ 							core.currentGame.teams[idx].updateTeam: teams[idx];
+ 						}
+ 					}
+ 				};
+ 			}
+ 		}
+ 	};
+ };
+
+/***************
+ * Export List *
+ ***************/
+
+ object: { 
+ 	def merger := merger; 
+ };
