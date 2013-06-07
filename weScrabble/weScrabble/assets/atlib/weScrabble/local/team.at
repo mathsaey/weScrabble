@@ -59,20 +59,28 @@ def team := isolate: {
 	// data of another player.
 	// any new player in the active or resolved list is added.
 	def updateTeam: t {
+		def changeOccured := false;
+
 		if: (is: t taggedAs: Team)
 		then: {
 			foreach: { |p|
 				 if: !activePlayers.contains(p)
-				 then: {addPlayer: p};
+				 then: {
+				 	addPlayer: p; 
+				 	changeOccured := true
+				 };
 			} in: t.activePlayers;
 			foreach: { |p|
 				 if: !resolvedPlayers.contains(p) 
-				 then: {resolvePlayer: p};
+				 then: {
+				 	resolvePlayer: p;
+				 	changeOccured := true
+				 };
 			} in: t.resolvedPlayers();
 		} else: {
 			raise: XInvalidArgument.new("team.updateTeam(t) received non-team argument")
 		};
-		self;
+		changeOccured;
 	};
 
 	// check if every member of the team finished

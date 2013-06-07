@@ -32,9 +32,10 @@ def importer := object: {
 
  	// Join game at index
  	def joinGame(idx, localPlayer) {
- 		def resGame := clone: game;
+ 		def [futureGame, resGame] := makeFuture();
+ 		def tmpGame := clone: game;
  		def gameRef := games[idx];
- 		resGame.localPlayer := localPlayer;
+ 		tmpGame.localPlayer := localPlayer;
 
  		//Ensure the game is currently reachable
  		if: gameRef == 0 then: {
@@ -46,11 +47,14 @@ def importer := object: {
  		def futureName := gameRef<-name()@TwoWay;
  		def futureTeams := gameRef<-teams()@TwoWay;
 
- 		// Store the remote data once possible
- 		when: futureID 		becomes: {|id| resGame.id := id};
- 		when: futureName 	becomes: {|n| resGame.name := n};
- 		when: futureTeams 	becomes: {|t| resGame.teams := t;
- 			resGame.teams[localPlayer.teamIdx()].addPlayer: localPlayer;
+ 		when: (group: [futureID, futureName, futureTeams]) becomes: { |values|
+ 			def [id,n,t] := values;
+ 			tmpGame.id := id;
+			tmpGame.name := n;
+			tmpGame.teams := t;
+			tmpGame.teams[localPlayer.teamIdx()].addPlayer: localPlayer;
+
+			resGame.resolve(tmpGame);
  		};
 
  		// Add localplayer to the remote game 
@@ -59,28 +63,23 @@ def importer := object: {
 
  		// Stop looking for new games
  		self.endSearch();
-
- 		resGame;
+ 		futureGame;
  	};
 
  	// Start looking for available games
  	def search() {
  		// Ensure we only have one active search going
  		if: subscriptions == [] then: {
- 			system.println("IMPORTER: Searching...");
-
  			// When discovering a game, ensure we haven't stored it before
  			subscriptions := subscriptions + [
  			whenever: ActiveGame discovered: { |game|
  			if:  !games.contains(game) then: {
- 				system.println("IMPORTER: New game discovered!");
  				def nameF := game<-name()@TwoWay;
  				def name;
  				def idx;
 
  				when: nameF becomes: {|n|
  					name := n;
- 					system.println("IMPORTER: name: " + n);
  					gameNames := gameNames + [name];
  					games := games + [game];
  					idx := games.length;
@@ -88,10 +87,7 @@ def importer := object: {
 
  				subscriptions := subscriptions + [
  				whenever: game reconnected: {
- 					if: name == nil then: {
- 						system.println("IMPORTER: unkown game reconnected");
- 					} else: {
- 						system.println("IMPORTER: " + name + " reconnected");
+ 					if: name != nil then: {
  						gameNames[idx] := name;
  					};
  					games[idx] := game;
@@ -99,10 +95,7 @@ def importer := object: {
 
  				subscriptions := subscriptions + [
  				whenever: game disconnected: {
- 					if: name == nil then: {
- 						system.println("IMPORTER: unkown game disconnected");
- 					} else: {
- 						system.println("IMPORTER: " + name + " disconnected");
+ 					if: name != nil then: {
  						gameNames[idx] := gameNames[idx] + " <Disconnected>";
  						games[idx] := 0;
  					};

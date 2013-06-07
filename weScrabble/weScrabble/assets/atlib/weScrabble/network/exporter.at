@@ -2,35 +2,99 @@
 // Mathijs Saey
 // The import module is responsible for broadcasting data about the current game
 
+import /.at.lang.values;
+
 import /.weScrabble.local.game;
+import /.weScrabble.local.team;
 
-/************
- * Exporter *
- ************/
+def exporter := object: { 
+	def game;
 
-// We export an active game as a game anybody can join
-// a normal game is exported as a game that can be used for merging.
-def export(game) {
-	def subscription;
-
-	// Ensure we only have one active export
-	if: subscription != nil then: {
-		subscription.cancel();
+	/*******************
+	 * Lifting methods *
+	 *******************/
+	
+	// This creates a new closure that performs
+	// calls the old closure and performs the additional operations
+	def expandClosure(closure) {
+		def newClosure(@args) {
+			def res := closure.apply(args);
+			export();
+			res;
+		};
+	};
+	
+	// Creates a new version which is basically
+	// the new method with the old name.
+	def liftMethod(closure) {
+		def newClosure := expandClosure(closure);
+		def method := createMethod(closure.method.name(), 
+					 				newClosure.method.parameters(), 
+									newClosure.method.bodyExpression(), 
+									newClosure.method.annotations());
+		createClosureMethod(newClosure.context().lexicalScope(), method);
 	};
 
-	system.println("Exporting " + game.name());
-	if: game.canJoinGame() then: {
-		subscription := export: game as: ActiveGame;
-	} else: {
-		subscription := export: game as: ResolvedGame;
+	// Removes a method from the object, and replaces
+	// it with a lifted version
+	def replaceMethod(obj, methodName) {
+		// Grab method, create lifted method
+		def mirror := reflect: obj;
+		def closure := mirror.select(obj, methodName);
+		def newClosure := liftMethod(closure);
+
+		// Remove the old method and add the new
+		mirror.removeSlot(methodName);
+		mirror.addMethod(newClosure);
 	};
-	nil;
+
+	// This method uses reflection to trigger
+	// updates whenever certain methods are called
+	def expandMethods() {
+		// List all the methods that have to trigger an update here
+		self.replaceMethod(self.game, `addTeam:);
+		self.replaceMethod(self.game, `updateTeams:);
+		self.replaceMethod(self.game, `addPlayer:withIdx:);
+
+		nil;
+	};
+
+	/************
+	 * Exporter *
+	 ************/
+
+	 def init(game) {
+	 	self.game := game;
+	 	expandMethods();
+	 };
+
+	// We export an active game as a game anybody can join
+	// a normal game is exported as a game that can be used for merging.
+	def export() {
+		def subscription;
+	
+		// Ensure we only have one active export
+		if: subscription != nil then: {
+			subscription.cancel();
+			subscription := nil;
+		};
+	
+		if: game.changeOccured then: {
+			system.println("Exporting " + self.game.name());
+			if: self.game.canJoinGame() then: {
+				subscription := export: self.game as: ActiveGame;
+			} else: {
+				subscription := export: self.game as: ResolvedGame;
+			};
+			game.changeOccured := false;
+		};
+		nil;
+	};
 };
-
 /***************
  * Export List *
  ***************/
 
 object: { 
-	def export := &export; 
+	def exporter := exporter; 
 };

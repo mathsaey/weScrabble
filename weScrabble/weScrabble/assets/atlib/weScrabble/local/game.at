@@ -27,6 +27,9 @@ deftype ResolvedGame <: Game;
 def game := object: {
 	// Unique identifier of the game
 	def id := "";
+	// Checks if a check occured since the last time 
+	// the variable was set
+	def changeOccured := true;
 	// Name chosen by the person that started the game
 	// does not need to be unique
 	def name;
@@ -49,6 +52,7 @@ def game := object: {
 
 	def addPlayer: playerRef withIdx: idx {
 		self.teams[idx].addPlayer: playerRef;
+		changeOccured := true;
 	};
 
 	// Checks if any of the teams finished the game
@@ -72,12 +76,24 @@ def game := object: {
 		then: {
 			raise: XMaximumTeamsReached.new("This game already has enough teams!");
 		} else: {
+			changeOccured := true;
 			teams := teams + [team.new(name)];
 		};
 	};
 	// Creates a team for each entry in a table
 	def addTeams: names {
 		foreach: {|t| addTeam: t} in: names;
+	};
+
+	// Updates all the teams
+	def updateTeams: teamArray {
+		def changeOccured := false;
+		teamArray.length.doTimes: { |i|
+			changeOccured.or:{self.teams[i].updateTeam: teamArray[i]};
+		};
+		if: changeOccured then: {
+			self.changeOccured := true;
+		};
 	};
 
 	// Generate a unique ID
@@ -88,7 +104,6 @@ def game := object: {
 		def time := /.at.support.timer.now().toString(); 
 		deviceID + "-" + time;
 	};
-
 } taggedAs: [Game];
 
 /***************

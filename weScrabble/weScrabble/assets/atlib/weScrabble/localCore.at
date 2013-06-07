@@ -18,6 +18,10 @@ import /.at.lang.futures;
  * Core  *
  *********/
 
+
+ // => in game timestamp bijhouden van laatste change
+ // => listener aan kopellen via future, bij elke change reexporten
+
 def core := object: { 
 	def currentGame;
 	def localPlayer;
@@ -48,8 +52,11 @@ def core := object: {
 	// Join a game (if it's in range)
 	def joinGame(gameIdx, teamIdx) {
 		localPlayer.teamIdx := teamIdx;
-		currentGame := importer.joinGame(gameIdx, self.localPlayer);
-		self.startGame();
+		when: importer.joinGame(gameIdx, self.localPlayer) becomes: { |game|
+			currentGame := game;
+			self.startGame();
+		};
+		nil;
 	};
 
 	// Get the names of the games that are in range
@@ -81,12 +88,13 @@ def core := object: {
 	// recalling this serves as a refresh
 	// (when changing tags)
 	def exportGame() {
-		export(currentGame);
+		exporter.init(currentGame);
+		exporter.export();
 	};
 
 	// Looks for other games and merges with them
 	def runUpdater() {
-		merger.runUpdater(self);
+		merger.runUpdater(self.currentGame);
 	};
 
 	/*********

@@ -21,23 +21,20 @@ import /.weScrabble.local.team;
  		self;
  	};
 
- 	def runUpdater(core) {
+ 	def runUpdater(localGame) {
  		subscriptions := subscriptions + [
  		whenever: Game discovered: { |game|
  			def futureID := game<-id()@TwoWay;
 
 	 		subscriptions := subscriptions + [
  			when: futureID becomes: {|id|
- 				if: id == core.currentGame.id then: {
- 					system.println("MERGER: merger discovered game");
+ 				if: id == localGame.id then: {
  					def futureTeams := game<-teams()@TwoWay;
 
 	 				subscriptions := subscriptions + [
  					when: futureTeams becomes: {|teams|
- 						teams.length.doTimes: { |idx|
- 							system.println("merging: " + teams[idx].name);
- 							core.currentGame.teams[idx].updateTeam: teams[idx];
- 						}
+ 						system.println("merging...");
+ 						localGame.updateTeams: teams;
  					}]
  				};
  			}]
