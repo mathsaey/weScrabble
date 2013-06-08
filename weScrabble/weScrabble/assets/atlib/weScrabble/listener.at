@@ -1,0 +1,53 @@
+// listener.at
+// Mathijs Saey
+// The listener module allows us to create notifiers 
+// that are called when certain methods are called.
+
+import /.at.lang.values;
+
+/*******************
+ * Lifting methods *
+ *******************/
+
+// This creates a new closure that performs
+// calls the old closure and performs the additional operations
+def expandClosure(closure, callback) {
+	def newClosure(@args) {
+		def res := closure.apply(args);
+		callback();
+		res;
+	};
+};
+
+// Creates a new version which is basically
+// the new method with the old name.
+def liftMethod(closure, callback) {
+	def newClosure := expandClosure(closure, callback);
+	def method := createMethod(closure.method.name(), 
+				 				newClosure.method.parameters(), 
+								newClosure.method.bodyExpression(), 
+								newClosure.method.annotations());
+	createClosureMethod(newClosure.context().lexicalScope(), method);
+};
+
+// Adds a callback to an object that will get called
+// every time method is called.
+def addListener(object, methodName, callback) {
+	// Grab method, create lifted method
+	def mirror := reflect: object;
+	def closure := mirror.select(object, methodName);
+	def newClosure := liftMethod(closure,callback);
+
+	// Remove the old method and add the new
+	mirror.removeSlot(methodName);
+	mirror.addMethod(newClosure);
+	nil;
+};
+
+/***************
+ * Export List *
+ ***************/
+
+object: { 
+	def addListener := &addListener; 
+};

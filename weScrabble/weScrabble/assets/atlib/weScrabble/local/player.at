@@ -24,16 +24,33 @@ def getRandomLetter() {
 	CONSTANTS.ALPHABET[idx];
 };
 // Returns a table of length n filled with random letters
-def getRandomLetters: n {
+def getRandomLetters(n) {
 	def res [n];
 	n.doTimes: {|i| res[i]:=getRandomLetter()};
-	res
+	res;
 };
+
+// Returns (length/2) random letters from a word
+def getThrowLetters(word) {
+	def n := (word.length / 2).floor();
+	def currentWord := word;
+	def res := [];
+
+	n.doTimes: {|i| 
+		def idx := randomNumberBetween(1, currentWord.length());
+		def let := currentWord[idx];
+		currentWord[idx] := "_";
+		currentWord := currentWord.filter:{|l| l != "_"};
+		res := res + [let];
+	};
+	res;
+};
+
 // Create an empty rack
 def createRack() {[]};
 // Adds a letter to the rack (a table)
-def addLetter: letter toRack: rack {
-	rack + [letter];
+def addLetter(letter, rack) {
+	rack := rack + [letter];
 };
 
 /**********
@@ -76,7 +93,7 @@ def activePlayer := extend: player with: {
 	def init(playerName, teamIdx) {
 		super^init(playerName,teamIdx);
 		self.rack := createRack();
-		self.letters := getRandomLetters: CONSTANTS.LETTER_AMOUNT;
+		self.letters := getRandomLetters(CONSTANTS.LETTER_AMOUNT);
 		self;
 	};
 
@@ -85,14 +102,40 @@ def activePlayer := extend: player with: {
 	};
 
 	// Checks if the rack currently contains a valid word
-	def checkRack: rack {
+	def checkRack(rack) {
 		findWord: rack.implode();
 	};
 
-	// Debug
-	def test() {
-		system.println("ding!");
-	}
+	def emptyRack() {
+		def res := false;
+		if: (self.checkRack(self.rack)) then: {
+			def word := self.rack;
+			self.rack := [];
+			res := getThrowLetters(word);
+		};
+		res;
+	};
+
+	def moveToRack(idx) {
+		def let := letters[idx];
+		rack := rack + [let];
+		letters[idx] := "_";
+		letters := letters.filter: {
+			|l| l != "_"
+		}
+	};
+
+	def removeLetterFromRack() {
+		def i := 0;
+		def length := rack.length;
+		def let := rack[length];
+		letters := letters + [let];
+		def rack[length - 1] {
+			i := i + 1;
+			rack[i];
+		};
+		self.rack := rack;
+	};
 
 } taggedAs: [ActivePlayer];
 

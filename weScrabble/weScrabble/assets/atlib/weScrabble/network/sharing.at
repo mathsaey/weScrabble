@@ -1,0 +1,28 @@
+// sharing.at
+// Mathijs Saey
+// This file contains the code for exchanging letters between players
+
+
+def share := object: { 
+	def game;
+
+	def init(game) {
+		self.game := game;
+	};
+
+	def requestLetter(l) {
+
+	};
+	def getLetters() {
+
+	};
+	// This allows throwing away half of the letters
+	// to nearby players of the other team
+	def throwLetters(letters) {
+
+	};
+};
+
+object: { 
+	def share := share; 
+};

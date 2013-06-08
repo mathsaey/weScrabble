@@ -52,14 +52,13 @@ def importer := object: {
  			tmpGame.id := id;
 			tmpGame.name := n;
 			tmpGame.teams := t;
-			tmpGame.teams[localPlayer.teamIdx()].addPlayer: localPlayer;
+			tmpGame.teams[localPlayer.teamIdx()].addPlayer(localPlayer);
 
 			resGame.resolve(tmpGame);
  		};
 
  		// Add localplayer to the remote game 
- 		// TODO: should contain a way to ensure player got added to remote game
- 		gameRef<-addPlayer: localPlayer withIdx: localPlayer.teamIdx();
+ 		gameRef<-addPlayer(localPlayer, localPlayer.teamIdx());
 
  		// Stop looking for new games
  		self.endSearch();

@@ -5,10 +5,10 @@
 // It's worth noting that these tests (and in fact all the tests in localTests folder)
 // only perform testing from a local point of view.
 
-// only works when the atlib is given to the shell as root folder
-// from the weScrabble folder: $ iat localTests/player.at -o root=../
+// only works when adding weScrabble as a path element
+// from the weScrabble folder: $ iat localTests/player.at -o weScrabble=.
 
-import /.root.weScrabble.local.player;
+import /.weScrabble.local.player;
 
 def playerUnitTest := extend: /.at.unit.test.UnitTest.new("player unit test") with: {
 	def testInit() {
@@ -23,9 +23,19 @@ def playerUnitTest := extend: /.at.unit.test.UnitTest.new("player unit test") wi
 	};
 
 	def testCheckRack() {
-		self.assertTrue(activePlayer.checkRack:["t","r","u","e"]);
-		self.assertFalse(activePlayer.checkRack:["m","a","t","h","i","j","s"]);
+		self.assertTrue(activePlayer.checkRack(["t","r","u","e"]));
+		self.assertFalse(activePlayer.checkRack(["m","a","t","h","i","j","s"]));
+		activePlayer.rack := ["t","r","u","e"];
+		self.assertTrue(activePlayer.emptyRack().length >= 1);
 	};
+	def testMove() {
+		def p := activePlayer.new("test", 1);
+		p.moveToRack(1);
+		self.assertTrue(p.rack.length = 1);
+		self.assertFalse(p.emptyRack());
+		p.removeLetterFromRack();
+		self.assertTrue(p.rack.length = 0);
+	}
 };
 
 playerUnitTest.runTest();

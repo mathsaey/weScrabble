@@ -21,6 +21,8 @@ import /.weScrabble.local.team;
  		self;
  	};
 
+ 	// Starts the merger
+ 	// the merger will automerge with every game it discovers
  	def runUpdater(localGame) {
  		subscriptions := subscriptions + [
  		whenever: Game discovered: { |game|
@@ -34,7 +36,8 @@ import /.weScrabble.local.team;
 	 				subscriptions := subscriptions + [
  					when: futureTeams becomes: {|teams|
  						system.println("merging...");
- 						localGame.updateTeams: teams;
+ 						foreach: { |t| system.println(" " + t.name)} in: teams;
+ 						localGame.updateTeams(teams);
  					}]
  				};
  			}]

@@ -5,10 +5,10 @@
 // It's worth noting that these tests (and in fact all the tests in localTests folder)
 // only perform testing from a local point of view.
 
-// only works when the atlib is given to the shell as root folder
+// only works when adding weScrabble as a path element
 // from the weScrabble folder: $ iat localTests/team.at -o root=../
 
-import /.root.weScrabble.local.team;
+import /.weScrabble.local.team;
 
 def teamUnitTest := extend: /.at.unit.test.UnitTest.new("team unit test") with: {
 
@@ -20,15 +20,15 @@ def teamUnitTest := extend: /.at.unit.test.UnitTest.new("team unit test") with: 
 
   def testAddPlayer() {
   	def t := team.new("testTeam!");
-  	t.addPlayer:"test";
+  	t.addPlayer("test");
   	self.assertNotEquals(t.activePlayers, [], "activePlayers empty after adding player");
   };
 
   def testResolvePlayer() {
   	def t := team.new("testTeam!");
   	self.assertFalse(t.didTeamResolve(), "team resolved before anybody played!");
-  	t.addPlayer:"test";
-  	t.resolvePlayer:"test";
+  	t.addPlayer("test");
+  	t.resolvePlayer("test");
   	self.assertEquals(t.activePlayers, [], "activePlayers not empty after resolving player");
   	self.assertNotEquals(t.resolvedPlayers, [], "resolvedPlayers empty after resolving player");
   	self.assertTrue(t.didTeamResolve(), "didTeamResolve returned false");
@@ -37,9 +37,9 @@ def teamUnitTest := extend: /.at.unit.test.UnitTest.new("team unit test") with: 
   def testAllPlayers() {
   	def t := team.new("testTeam!");
   	self.assertEquals(t.allPlayers(), [], "allPlayers should return empty table!");
-  	t.addPlayer:"test 1";
-  	t.addPlayer:"test 2";
-  	t.resolvePlayer:"test 3";
+  	t.addPlayer("test 1");
+  	t.addPlayer("test 2");
+  	t.resolvePlayer("test 3");
 
   	self.assertTrue(t.allPlayers().contains("test 1"), "Player 1 missing in allPlayers");
   	self.assertTrue(t.allPlayers().contains("test 2"), "Player 2 missing in allPlayers");
@@ -48,21 +48,21 @@ def teamUnitTest := extend: /.at.unit.test.UnitTest.new("team unit test") with: 
 
   def testUpdateTeam() {
   	def t1 := team.new("testTeam 1");
-  	t1.addPlayer:"test 1";
-  	t1.addPlayer:"test 2";
+  	t1.addPlayer("test 1");
+  	t1.addPlayer("test 2");
   	def t2 := clone: t1;
 
   	self.assertEquals(t1.activePlayers,t2.activePlayers,"error while cloning teams!");
   	self.assertEquals(t1.resolvedPlayers,t2.resolvedPlayers,"error while cloning teams!");
   	self.assertEquals(t1.name,t2.name,"error while cloning teams!");
 
-  	t1.resolvePlayer:"test 1";
-  	t2.addPlayer:"test 3";
+  	t1.resolvePlayer("test 1");
+  	t2.addPlayer("test 3");
 
-  	self.assert: InvalidArgument raisedIn:{t1.updateTeam:""};
+  	self.assert: InvalidArgument raisedIn:{t1.updateTeam("")};
 
-  	t1.updateTeam: t2;
-  	t2.updateTeam: t1;
+  	t1.updateTeam(t2);
+  	t2.updateTeam(t1);
   	self.assertTrue(t1.activePlayers.contains("test 3"));
   	self.assertTrue(!t2.activePlayers.contains("test 1"));
   	self.assertTrue(t2.resolvedPlayers.contains("test 1"));

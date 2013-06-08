@@ -44,12 +44,12 @@ def team := isolate: {
 	};
 
 	// Add a player to the team
-	def addPlayer: player {
+	def addPlayer(player) {
 		activePlayers := activePlayers + [player];
 		self;
 	};
 	// Resolve a player.
-	def resolvePlayer: player {
+	def resolvePlayer(player) {
 		resolvedPlayers := resolvedPlayers + [player];
 		activePlayers := activePlayers.filter:{|p| p != player};
 		self;
@@ -58,7 +58,7 @@ def team := isolate: {
 	// This method updates it's player list based on the team
 	// data of another player.
 	// any new player in the active or resolved list is added.
-	def updateTeam: t {
+	def updateTeam(t) {
 		def changeOccured := false;
 
 		if: (is: t taggedAs: Team)
@@ -66,14 +66,14 @@ def team := isolate: {
 			foreach: { |p|
 				 if: !activePlayers.contains(p)
 				 then: {
-				 	addPlayer: p; 
+				 	addPlayer(p); 
 				 	changeOccured := true
 				 };
 			} in: t.activePlayers;
 			foreach: { |p|
 				 if: !resolvedPlayers.contains(p) 
 				 then: {
-				 	resolvePlayer: p;
+				 	resolvePlayer(p);
 				 	changeOccured := true
 				 };
 			} in: t.resolvedPlayers();

@@ -5,11 +5,11 @@
 // It's worth noting that these tests (and in fact all the tests in localTests folder)
 // only perform testing from a local point of view.
 
-// only works when the atlib is given to the shell as root folder
+// only works when adding weScrabble as a path element
 // from the weScrabble folder: $ iat localTests/game.at -o root=../
 
-import /.root.weScrabble.local.game;
-import /.root.weScrabble.local.player;
+import /.weScrabble.local.game;
+import /.weScrabble.local.player;
 
 def gameUnitTest := extend: /.at.unit.test.UnitTest.new("game unit test") with: {
 	def testP1 := activePlayer.new("testPlayer 1", 1);
@@ -24,7 +24,7 @@ def gameUnitTest := extend: /.at.unit.test.UnitTest.new("game unit test") with: 
 	};
 
 	def testAddPlayer() {
-		testGame.addPlayer: testP2 withIdx: 2;
+		testGame.addPlayer(testP2, 2);
 		self.assertTrue(testGame.teams[2].activePlayers[1] == testP2);
 	};
 };

@@ -43,15 +43,15 @@ def game := object: {
 		self.teams := [];
 		self.name := name;
 		self.id := generateID(deviceID);
-		self.addTeams: teamNames;
+		self.addTeams(teamNames);
 		self.localPlayer := localPlayer;
 
-		teams[localPlayer.teamIdx()].addPlayer: localPlayer;
+		teams[localPlayer.teamIdx()].addPlayer(localPlayer);
 		self;
 	};
 
-	def addPlayer: playerRef withIdx: idx {
-		self.teams[idx].addPlayer: playerRef;
+	def addPlayer(playerRef, idx) {
+		self.teams[idx].addPlayer(playerRef);
 		changeOccured := true;
 	};
 
@@ -71,7 +71,7 @@ def game := object: {
 	};
 
 	// Add a team to the game if there is room
-	def addTeam: name {
+	def addTeam(name) {
 		if: teams.length >= CONSTANTS.TEAM_AMOUNT 
 		then: {
 			raise: XMaximumTeamsReached.new("This game already has enough teams!");
@@ -81,15 +81,15 @@ def game := object: {
 		};
 	};
 	// Creates a team for each entry in a table
-	def addTeams: names {
-		foreach: {|t| addTeam: t} in: names;
+	def addTeams(names) {
+		foreach: {|t| addTeam(t)} in: names;
 	};
 
 	// Updates all the teams
-	def updateTeams: teamArray {
+	def updateTeams(teamArray) {
 		def changeOccured := false;
 		teamArray.length.doTimes: { |i|
-			changeOccured.or:{self.teams[i].updateTeam: teamArray[i]};
+			changeOccured.or:{self.teams[i].updateTeam(teamArray[i])};
 		};
 		if: changeOccured then: {
 			self.changeOccured := true;
