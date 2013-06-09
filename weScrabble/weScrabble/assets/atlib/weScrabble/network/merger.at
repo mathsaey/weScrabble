@@ -14,13 +14,16 @@ import ~.scanner;
  **********/
 
  def merger := extend: (clone: scanner) with: {
+
+ 	// Look for any game with the same ID
  	def runScanner() {super^runScanner(Game)};
- 	
+
+ 	// When we find a game, fetch the teams
  	def onGameConnection(gameRef) {
  		def futureTeams := gameRef<-teams()@TwoWay;
 
+ 		// Update every team.
  		when: futureTeams becomes: {|teams|
- 			system.println("merging...");
  			self.game.updateTeams(teams);
  		}
  	};

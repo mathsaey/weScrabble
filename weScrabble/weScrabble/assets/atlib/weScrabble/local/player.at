@@ -1,6 +1,6 @@
 // player.at
 // Mathijs Saey
-// This file contains the implementation of the player object
+// This file contains the implementation of the player objects
 
 import /.at.lang.types;
 import /.at.support.util;
@@ -17,6 +17,7 @@ def getRandomLetter() {
 	def idx := randomNumberBetween(1, CONSTANTS.ALPHABET.length());
 	CONSTANTS.ALPHABET[idx];
 };
+
 // Returns a table of length n filled with random letters
 def getRandomLetters(n) {
 	def res [n];
@@ -40,7 +41,6 @@ def getThrowLetters(word) {
 	res;
 };
 
-
 // Create an empty rack
 def createRack() {[]};
 // Adds a letter to the rack (a table)
@@ -59,47 +59,26 @@ def removeElement(table, idx) {
  * Player *
  **********/
 
-/**
- An activePlayer object represents a player that is still playing
-*/
-def activePlayer := object: {
-	def isActive() {true};
-};
-
-/**
- A resolved player object represents a player that used all his letters
-*/
+// A resolved player object represents a player that used all his letters
 def resolvedPlayer := object: {
-	// the resolvetime represents when the game was resolved
 	def resolveTime;
-
 	def isActive() {false;};
 };
 
-/**
- An activePlayer object represents a player currently still playing
- the game, on top of the regular data, it also stores the rack and letters
-*/
-def player := extend: activePlayer with: {
-	// Name of the player 
-	def name;
-	// idx of the team the player is in.
-	def teamIdx;
+// An activePlayer object represents a player that is still playing
+def activePlayer := object: {
 	// The rack is the table that contains the word being formed
 	def rack := [];
 	// The letters is a table containing the letters the player still has to use
 	def letters := [];
 
-	def init(name, teamIdx) {
-		self.name := name;
-		self.teamIdx := teamIdx;
+	def isActive() {true};
+
+	// Initialise the game
+	def init() {
 		self.rack := createRack();
 		self.letters := getRandomLetters(CONSTANTS.LETTER_AMOUNT);
 		self;
-	};
-
-	def resolve() {
-		super := resolvedPlayer;
 	};
 
 	// Checks if the rack currently contains a valid word
@@ -107,9 +86,12 @@ def player := extend: activePlayer with: {
 		findWord: rack.implode();
 	};
 
+	// Remove the letters in the rack from the game
+	// if they contain a valid word. Return the letters
+	// to throw to the other team
 	def emptyRack() {
 		def res := false;
-		if: (self.checkRack(self.rack)) then: {
+		if: (self.checkRack()) then: {
 			def word := self.rack;
 			self.rack := [];
 			res := getThrowLetters(word);
@@ -119,25 +101,32 @@ def player := extend: activePlayer with: {
 		res;
 	};
 
+	// Move a letter to the rack
 	def moveToRack(idx) {
 		def let := letters[idx];
 		rack := rack + [let];
 		letters := removeElement(letters, idx);
 	};
 
+	// Moves the last letter from
+	// the rack to the letters
 	def removeLetterFromRack() {
 		def length := rack.length;
 		def let := rack[length];
 		letters := letters + [let];
-		self.rack := rack.select(1, length - 1);
+		self.rack := rack.select(1, length);
 	};
 
+	// Add some letters
 	def addLetters(letters) {
 		self.letters := self.letters + letters;
 	};
+	// Removes a letter from the letters table
 	def removeLetterWithIdx(idx) {
 		self.letters := removeElement(letters, idx);
 	};
+	// Look for a certain letter in the letters table
+	// return it if we have that letter
 	def takeLetter(letter) {
 		def idx := self.letters.find:{|e| e == letter};
 		def res := letter;
@@ -147,6 +136,33 @@ def player := extend: activePlayer with: {
 			res := nil;
 		};
 		res;
+	};
+};
+
+// Represents a player, the state is determined by it's super slot
+def player := extend: activePlayer with: {
+	// Name of the player 
+	def name;
+	// Link to the game
+	def game;
+	// idx of the team the player is in.
+	def teamIdx;
+
+	// Initialise the game
+	// Note that game should be set after initialisation
+	// once a game has been made
+	def init(name, teamIdx) {
+		super^init();
+		self.name := name;
+		self.teamIdx := teamIdx;
+		self;
+	};
+
+	// Turns the game into a resolved game
+	def resolve() {
+		self.game.teams[teamIdx].resolvePlayer(self);
+		self.super := resolvedPlayer;
+		self;
 	};
 };
 

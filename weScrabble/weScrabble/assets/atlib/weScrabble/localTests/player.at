@@ -9,33 +9,49 @@
 // from the weScrabble folder: $ iat localTests/player.at -o weScrabble=.
 
 import /.weScrabble.local.player;
+import /.weScrabble.local.game;
 
 def playerUnitTest := extend: /.at.unit.test.UnitTest.new("player unit test") with: {
-	def testInit() {
-		def p := activePlayer.new("test", 1);
-		self.assertNotNil(p.letters());
-		self.assertNotNil(resolvedPlayer.init(p).resolveTime());
+	def testPlayer;
+
+	def setUp() {
+		testPlayer := player.new("test",1);
+		testPlayer.game := game.new("testGame", ["red", "blue"], testPlayer, "local");
+	};
+	def tearDown() {
+		testPlayer := nil;
 	};
 
-	def testJoin() {
-		self.assertTrue(activePlayer.canJoinGame());
-		self.assertFalse(resolvedPlayer.canJoinGame());
+	def testInit() {
+		self.assertNotNil(testPlayer.letters());
+		self.assertNotNil(testPlayer.teamIdx());
+		self.assertNotNil(testPlayer.rack());
+		self.assertNotNil(testPlayer.name());
+		self.assertNotNil(testPlayer.game());
+	};
+
+	def testActive() {
+		self.assertTrue(testPlayer.isActive());
+		testPlayer.resolve();
+		self.assertFalse(testPlayer.isActive());
 	};
 
 	def testCheckRack() {
-		self.assertTrue(activePlayer.checkRack(["t","r","u","e"]));
-		self.assertFalse(activePlayer.checkRack(["m","a","t","h","i","j","s"]));
-		activePlayer.rack := ["t","r","u","e"];
-		self.assertTrue(activePlayer.emptyRack().length >= 1);
+		testPlayer.rack := ["t","r","u","e"];
+		self.assertTrue(testPlayer.checkRack());
+		testPlayer.rack := ["m","a","t","h","i","j","s"];
+		self.assertFalse(testPlayer.checkRack());
+		testPlayer.rack := ["t","r","u","e"];
+		self.assertTrue(testPlayer.emptyRack().length >= 1);
 	};
+
 	def testMove() {
-		def p := activePlayer.new("test", 1);
-		p.moveToRack(1);
-		self.assertTrue(p.rack.length = 1);
-		self.assertFalse(p.emptyRack());
-		p.removeLetterFromRack();
-		self.assertTrue(p.rack.length = 0);
-	}
+		testPlayer.moveToRack(1);
+		self.assertTrue(testPlayer.rack.length = 1);
+		self.assertFalse(testPlayer.emptyRack());
+		testPlayer.removeLetterFromRack();
+		self.assertTrue(testPlayer.rack.length = 0);
+	};
 };
 
 playerUnitTest.runTest();

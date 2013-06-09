@@ -14,12 +14,15 @@ def exporter := object: {
 	def subscription;
 	def game;
 
-	 def init(game) {
+	// Store the local game
+	// and add required listeners
+	def init(game) {
 	 	self.game := game;
 	 	expandMethods();
+	 	self.export();
 	 };
 
-	// Ensure export gets called on certain game methods
+	// Ensure certain methods trigger an update
 	def expandMethods() {
 		addListener(self.game.super, `update, self.&shouldTriggerUpdate);
 		addListener(self.game.localPlayer, `resolve, self.&export);
@@ -45,12 +48,10 @@ def exporter := object: {
 			takeOffline: game;
 			subscription := nil;
 		};
-	
+	system.println("export triggered");
 		if: self.game.isActive() then: {
-			system.println("Exporting active " + self.game.name());
 			subscription := export: self.game as: ActiveGame;
 		} else: {
-			system.println("Exporting resolved " + self.game.name());
 			subscription := export: self.game as: ResolvedGame;
 		};
 		nil;

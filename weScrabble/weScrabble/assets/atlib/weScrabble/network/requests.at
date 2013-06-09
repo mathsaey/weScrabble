@@ -1,0 +1,88 @@
+// requests.at
+// Mathijs Saey
+// The requests module is responsible for sending requests to peers in the network
+// and for triggering an action when an answer to this request has been received.
+
+/***********       
+ * Request *
+ ***********/
+// A request contains the data needed to trigger
+// the correct callback when answering.
+def request := isolate: { 
+	// The actual request, a string message
+	def request;
+	// The requestSender that sent the request
+	def sender;
+	// The idx of the callback in the requestSender
+	def idx;
+
+	def init(request, sender, idx) {
+		self.request := request;
+		self.sender := sender;
+		self.idx := idx;
+		self;
+	};
+};
+
+/***********       
+ * Handler *
+ ***********/
+
+def requestHandler := object: { 
+	// All the requests that haven't been
+	// handled yet
+	def requests := [];
+
+	// Receive a request and store it
+ 	def receive(request) {
+		def idx := requests.find: {|e| e == 0};
+		if: idx == nil then: {
+			idx := requests.length + 1;
+			requests := requests + [request];
+		} else: {requests[idx] := request};
+ 	};
+
+ 	// Send the answer for a certain request
+ 	def answer(idx, answer) {
+ 		def req := requests[idx];
+ 		req.sender<-receiveAnswer(req.idx, answer);
+ 	};
+ };
+
+/**********       
+ * Sender *
+ **********/
+
+def requestSender := object: {
+	// callbacks of the request
+	// waiting for an answer
+	def callbacks := [];
+
+	// Send a request to a handler
+	def send(receiver, callback, requestText) {
+		def idx := callbacks.find: {|e| e == 0};
+		if: idx == nil then: {
+			idx := callbacks.length + 1;
+			callbacks := callbacks + [callback];
+		} else: {callbacks[idx] := callback};
+		receiver<-receive(request.new(requestText, self, idx));
+	};
+
+	// Receive the answer, execute the callback
+	// if the answer is true
+	def receiveAnswer(idx, bool) {
+		if: bool then: {
+			callbacks[idx]();
+		};
+		callbacks[idx] := 0;
+	};	 
+};
+
+/***************
+ * Export List *
+ ***************/
+
+ object: { 
+ 	def requestHandler := requestHandler; 
+ 	def requestSender := requestSender; 
+ };

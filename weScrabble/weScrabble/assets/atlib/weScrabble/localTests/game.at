@@ -12,9 +12,21 @@ import /.weScrabble.local.game;
 import /.weScrabble.local.player;
 
 def gameUnitTest := extend: /.at.unit.test.UnitTest.new("game unit test") with: {
-	def testP1 := activePlayer.new("testPlayer 1", 1);
-	def testP2 := activePlayer.new("testPlayer 2", 2);
-	def testGame := game.init("testGame", ["red", "blue"], testP1, "testId");
+	def testP1;
+	def testP2;
+	def testGame;
+
+	def setUp() {
+		testP1 := player.new("testPlayer 1", 1);
+		testP2 := player.new("testPlayer 2", 2);
+		testGame := game.init("testGame", ["red", "blue"], testP1, "testId");
+	};
+
+	def tearDown() {
+		testP1 := nil;
+		testP2 := nil;
+		testGame := nil;
+	};
 
 	def testInit() {
 		self.assertNotNil(testGame.id());
@@ -26,6 +38,17 @@ def gameUnitTest := extend: /.at.unit.test.UnitTest.new("game unit test") with: 
 	def testAddPlayer() {
 		testGame.addPlayer(testP2, 2);
 		self.assertTrue(testGame.teams[2].activePlayers[1] == testP2);
+	};
+
+	def testDidTeamWin() {
+		testGame.localPlayer.resolve();
+		self.assertTrue(testGame.didTeamWin(1));
+	};
+
+	def testIsActive() {
+		self.assertTrue(testGame.isActive());
+		testGame.localPlayer.resolve();
+		self.assertFalse(testGame.isActive());
 	};
 };
 

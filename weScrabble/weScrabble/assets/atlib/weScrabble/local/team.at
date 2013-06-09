@@ -4,29 +4,19 @@
 
 import /.at.lang.exceptions;
 
-// Exceptions
-deftype InvalidArgument <: lobby.at.lang.types.Exception;
-def  XInvalidArgument := createException(InvalidArgument);
-
-// Tag assigned to a team object
-deftype Team;
-
 /********
  * Team *
  ********/
 
-/**
-	A team represents a group of players that can collaborate.
+// A team represents a group of players that can collaborate.
 
-	A team has both active and resolved players, active players are 
-	still trying to get rid of some letters while resolved players are 
-	already done doing so. A team is finished once all the players are resolved.
-*/
+// A team has both active and resolved players, active players are 
+// still trying to get rid of some letters while resolved players are 
+// already done doing so. A team is finished once all the players are resolved.
 def team := isolate: {
 	// Team name
 	def name := "";
 
-	// contains all the players in the team
 	def activePlayers 	:= [];
 	def resolvedPlayers := [];
 
@@ -61,25 +51,21 @@ def team := isolate: {
 	def updateTeam(t) {
 		def changeOccured := false;
 
-		if: (is: t taggedAs: Team)
-		then: {
-			foreach: { |p|
-				 if: !activePlayers.contains(p)
-				 then: {
-				 	addPlayer(p); 
-				 	changeOccured := true
-				 };
-			} in: t.activePlayers;
-			foreach: { |p|
-				 if: !resolvedPlayers.contains(p) 
-				 then: {
-				 	resolvePlayer(p);
-				 	changeOccured := true
-				 };
-			} in: t.resolvedPlayers();
-		} else: {
-			raise: XInvalidArgument.new("team.updateTeam(t) received non-team argument")
-		};
+		foreach: { |p|
+			if: !activePlayers.contains(p)
+			then: { 
+				addPlayer(p); 
+				changeOccured := true
+			 };
+		} in: t.activePlayers;
+
+		foreach: { |p|
+			if: !resolvedPlayers.contains(p) 
+			then: {
+			 	resolvePlayer(p);
+			 	changeOccured := true
+			};
+		} in: t.resolvedPlayers();
 		changeOccured;
 	};
 
@@ -89,7 +75,7 @@ def team := isolate: {
 		// had at least one player before being resolved
 		activePlayers.isEmpty().and:{!resolvedPlayers.isEmpty()};
 	};
-} taggedAs: [Team];
+};
 
 /***************
  * Export List *
@@ -97,7 +83,4 @@ def team := isolate: {
 
 object: {
 	def team := team;
-	def Team := Team;
-	def InvalidArgument := InvalidArgument;
-	def XInvalidArgument := XInvalidArgument;
 };

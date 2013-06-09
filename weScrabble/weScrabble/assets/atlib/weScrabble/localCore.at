@@ -87,30 +87,10 @@ def core := object: {
 	// Starts the necessary services
 	// after the game has been joined/created
 	def startGame() {
-		self.startSharing();
-		self.runUpdater();
-		self.exportGame();
-		self;
-	};
-
-	// Export the current game
-	// recalling this serves as a refresh
-	// (when changing tags)
-	def exportGame() {
-		exporter.init(currentGame);
-		exporter.export();
-	};
-
-	// Looks for other games and merges with them
-	def runUpdater() {
-		merger.init(currentGame);
-		merger.runScanner();
-	};
-
-	// Allows the sharing of letters
-	def startSharing() {
 		share.init(currentGame);
-		share.runScanner();
+		merger.init(currentGame);
+		exporter.init(currentGame);
+		self;
 	};
 
 	/*********

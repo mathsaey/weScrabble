@@ -1,0 +1,80 @@
+// scanner.at
+// Mathijs Saey
+// The scanner module is responsible for finding 
+// games on the network. Subclasses implement
+// what happens when such a game is discovered
+
+import /.at.lang.futures;
+import /.weScrabble.local.game;
+
+/***********
+ * Scanner *
+ ***********/
+
+def scanner := object: {
+	// active subscriptions
+	def subscriptions;
+	// All the games that have been discovered at some point
+	def games;
+	// reference to the local game.
+	def game;
+
+	def init(game) {
+		self.subscriptions := [];
+		self.game := game;
+		self.games := [];
+		self.runScanner();
+		self;
+	};
+
+	// Cancel all searches
+	def stopScanner() {
+		foreach: { |s|
+			s.cancel();
+		} in: subscriptions;
+		subscriptions := [];
+	};
+
+	// Starts the scanner, the scanner
+	// looks for a certain type of game
+	def runScanner(gameType) {
+		subscriptions := subscriptions + [
+		whenever: gameType discovered: { |game|
+			def futureID := game<-id()@TwoWay;
+
+			// Only accept games with the same 
+			// id that have not been encountered
+			when: futureID becomes: {|id|
+				if: ((id == self.game.id).and:
+					{!self.games.contains(game)})
+				then: {
+					self.onGameConnection(game);
+					self.games := self.games + [game];
+
+					subscriptions := subscriptions + [
+					whenever: game reconnected: {
+						self.onGameConnection(game);
+					}];
+				};
+			}
+		}];
+		nil;
+	};
+
+	// children should implement the following methods
+
+	// Called when a game is encountered
+	// def onGameConnection(gameRef) {};
+
+	// Convenience method that calls the actual
+	// runScanner with a certain type.
+	// def runScanner(){};
+};
+
+/***************
+ * Export List *
+ ***************/
+
+ object: { 
+ 	def scanner := scanner; 
+ };

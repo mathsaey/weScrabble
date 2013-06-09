@@ -9,10 +9,6 @@ import /.weScrabble.local.game;
 import /.weScrabble.local.team;
 import /.weScrabble.local.player;
 
-// Exceptions
-deftype InvalidIndexEception <: lobby.at.lang.types.Exception;
-def  XInvalidIndexEception := createException(InvalidIndexEception);
-
 /************       
  * Importer *
  ************/
@@ -22,7 +18,7 @@ def importer := object: {
 	def gameNames := [];
 	def games := [];
 
-	// Cancels all current subscriptions
+	// Stop all searches
 	def endSearch() {
  		foreach: { |s|
  			 s.cancel();
@@ -37,16 +33,12 @@ def importer := object: {
  		def gameRef := games[idx];
  		tmpGame.localPlayer := localPlayer;
 
- 		//Ensure the game is currently reachable
- 		if: gameRef == 0 then: {
- 			raise: XInvalidIndexEception.new("No valid player found at idx " + idx);
- 		};
-
  		// Get some data about the remote game
  		def futureID := gameRef<-id()@TwoWay;
  		def futureName := gameRef<-name()@TwoWay;
  		def futureTeams := gameRef<-teams()@TwoWay;
 
+ 		// When resolved, insert necessary data and resolve future
  		when: (group: [futureID, futureName, futureTeams]) becomes: { |values|
  			def [id,n,t] := values;
  			tmpGame.id := id;
@@ -62,6 +54,7 @@ def importer := object: {
 
  		// Stop looking for new games
  		self.endSearch();
+ 		// Return unresolved future
  		futureGame;
  	};
 
@@ -69,21 +62,22 @@ def importer := object: {
  	def search() {
  		// Ensure we only have one active search going
  		if: subscriptions == [] then: {
- 			// When discovering a game, ensure we haven't stored it before
  			subscriptions := subscriptions + [
  			whenever: ActiveGame discovered: { |game|
  				def nameF := game<-name()@TwoWay;
  				def idx;
 
+ 				// Only add a game if we know it's name
  				when: nameF becomes: {|n|
  					gameNames := gameNames + [n];
  					games := games + [game];
  					idx := games.length;
  				};
 
+ 				// Remove a game from the joinable games 
+ 				// once it disconnects
  				subscriptions := subscriptions + [
  				when: game disconnected: {
- 					system.println("dis");
  					if: idx != nil then: {
  						games[idx] := 0;
  						gameNames[idx] := "_";

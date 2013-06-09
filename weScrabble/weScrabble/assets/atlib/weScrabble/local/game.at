@@ -12,7 +12,7 @@ import ~.constants;
 deftype MaximumTeamsReached <: lobby.at.lang.types.Exception;
 def  XMaximumTeamsReached := createException(MaximumTeamsReached);
 
-// Tag representing a game
+// Tags representing a game
 deftype Game;
 deftype ActiveGame <: Game;
 deftype ResolvedGame <: Game;
@@ -21,9 +21,7 @@ deftype ResolvedGame <: Game;
  * Game *
  ********/
 
-/**
-	A game represents the global state of the game stored by all players
-*/
+//A game represents the global state of the game stored by all players
 def game := object: {
 	// Unique identifier of the game
 	def id := "";
@@ -46,28 +44,38 @@ def game := object: {
 		self.addTeams(teamNames);
 		self.localPlayer := localPlayer;
 
+		localPlayer.game := self;
 		teams[localPlayer.teamIdx()].addPlayer(localPlayer);
 		self;
 	};
 
+	// Check if a given team won the game
+	def didTeamWin(idx) {
+		// See if the team is resolved
+		def didTeamResolve := teams[idx].didTeamResolve;
+		// See if any other team resolved
+		def didOtherTeamResolve := false;
+		teams.length.doTimes: {|i|
+			if: i != idx then: {
+				didOtherTeamResolve := didOtherTeamResolve.or:{
+					teams[i].didTeamResolve
+				}
+			};
+		};
+		// If the team at idx is the only resolved team,
+		// it won.
+		didTeamResolve.and: {!didOtherTeamResolve};
+	};
+
+	// Add a player to the game
 	def addPlayer(playerRef, idx) {
 		self.teams[idx].addPlayer(playerRef);
 		self.update();
 	};
 
-	// Checks if any of the teams finished the game
-	def didGameEnd() {
-		teams.inject: false into: {|accum, e| accum.or:{e.didTeamResolve()}}
-	};
-
 	// Checks if the local player finished his/her game.
 	def isActive() {
 		self.localPlayer.isActive();
-	};
-
-	// Checks if 2 games are the same by matching id's
-	def ==(other) {
-		self.id == other.id;
 	};
 
 	// Add a team to the game if there is room

@@ -11,21 +11,26 @@
 import /.weScrabble.local.team;
 
 def teamUnitTest := extend: /.at.unit.test.UnitTest.new("team unit test") with: {
+  def t;
+
+  def setUp() {
+    t := team.new("testTeam!");
+  };
+  def tearDown() {
+    t := nil;
+  };
 
   def testInit() {
-  	def t := team.new("testTeam!");
   	self.assertEquals(t.activePlayers,[],"activePlayers table not empty after init!");
   	self.assertEquals(t.resolvedPlayers,[], "resolvedPlayers not empty after init!");
   };
 
   def testAddPlayer() {
-  	def t := team.new("testTeam!");
   	t.addPlayer("test");
   	self.assertNotEquals(t.activePlayers, [], "activePlayers empty after adding player");
   };
 
   def testResolvePlayer() {
-  	def t := team.new("testTeam!");
   	self.assertFalse(t.didTeamResolve(), "team resolved before anybody played!");
   	t.addPlayer("test");
   	t.resolvePlayer("test");
@@ -35,7 +40,6 @@ def teamUnitTest := extend: /.at.unit.test.UnitTest.new("team unit test") with: 
   };
 
   def testAllPlayers() {
-  	def t := team.new("testTeam!");
   	self.assertEquals(t.allPlayers(), [], "allPlayers should return empty table!");
   	t.addPlayer("test 1");
   	t.addPlayer("test 2");
@@ -47,23 +51,20 @@ def teamUnitTest := extend: /.at.unit.test.UnitTest.new("team unit test") with: 
   };
 
   def testUpdateTeam() {
-  	def t1 := team.new("testTeam 1");
-  	t1.addPlayer("test 1");
-  	t1.addPlayer("test 2");
-  	def t2 := clone: t1;
+  	t.addPlayer("test 1");
+  	t.addPlayer("test 2");
+  	def t2 := clone: t;
 
-  	self.assertEquals(t1.activePlayers,t2.activePlayers,"error while cloning teams!");
-  	self.assertEquals(t1.resolvedPlayers,t2.resolvedPlayers,"error while cloning teams!");
-  	self.assertEquals(t1.name,t2.name,"error while cloning teams!");
+  	self.assertEquals(t.activePlayers,t2.activePlayers,"error while cloning teams!");
+  	self.assertEquals(t.resolvedPlayers,t2.resolvedPlayers,"error while cloning teams!");
+  	self.assertEquals(t.name,t2.name,"error while cloning teams!");
 
-  	t1.resolvePlayer("test 1");
+  	t.resolvePlayer("test 1");
   	t2.addPlayer("test 3");
 
-  	self.assert: InvalidArgument raisedIn:{t1.updateTeam("")};
-
-  	t1.updateTeam(t2);
-  	t2.updateTeam(t1);
-  	self.assertTrue(t1.activePlayers.contains("test 3"));
+  	t.updateTeam(t2);
+  	t2.updateTeam(t);
+  	self.assertTrue(t.activePlayers.contains("test 3"));
   	self.assertTrue(!t2.activePlayers.contains("test 1"));
   	self.assertTrue(t2.resolvedPlayers.contains("test 1"));
   }

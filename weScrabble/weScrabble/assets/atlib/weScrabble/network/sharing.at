@@ -18,6 +18,7 @@ import ~.scanner;
 
  	def runScanner() {super^runScanner(ActiveGame)};
 
+ 	// Store references to known friendly and enemy players
  	def onGameConnection(gameRef) {
  		def futurePlayer := gameRef<-localPlayer()@TwoWay;
  		def futureIdx := futurePlayer<-teamIdx()@TwoWay;
@@ -25,21 +26,23 @@ import ~.scanner;
 	 	when: futureIdx becomes: {|teamIdx|
 	 		if: teamIdx == self.game.localPlayer.teamIdx 
 	 		then: {
-	 			system.println("friendly player discovered");
-	 			friendlyPlayers := friendlyPlayers + [gameRef];
+	 			if: (!self.friendlyPlayers.contains(gameRef))
+	 				then: {friendlyPlayers := friendlyPlayers + [gameRef]};
 	 		} else: {
-	 			system.println("enemy player discovered");
-	 			enemyPlayers := enemyPlayers + [gameRef];
+	 			if: (!self.enemyPlayers.contains(gameRef))
+	 				then: {enemyPlayers := enemyPlayers + [gameRef]};
 	 		};
 	 	};
  	};
 
+ 	// fetch the letters of a remote friendly
  	def showLetters(idx) {
  		def ref := friendlyPlayers[idx];
  		def fut := ref<-localPlayer()@TwoWay;
  		fut<-letters()@TwoWay;
  	};
 
+ 	// request a letter from a friendly player
  	def requestLetter(idx, letter) {
  		def ref := friendlyPlayers[idx];
  		when: ref<-requestHandler()@TwoWay becomes: { |handler|
@@ -49,6 +52,8 @@ import ~.scanner;
  				self.game.localPlayer.name + " requests " + letter);
  		}
  	};
+
+ 	// request throwing letters to enemy players
  	def requestThrow(idx, letters) {
  	 	def ref := enemyPlayers[idx];
  		when: ref<-requestHandler()@TwoWay becomes: { |handler|
@@ -59,11 +64,14 @@ import ~.scanner;
  		}
  	};
 
+ 	// Throws letter to enemy player at idx
  	def throwLetters(idx, letters) {
  		def gRef := enemyPlayers[idx];
  		def pRef := gRef<-localPlayer()@TwoWay; 		
  		pRef<-addLetters(letters);
  	};
+ 	// Takes a letter from a friendly player 
+ 	// and add it to the rack
  	def takeLetter(idx, letter) {
  		def gRef := friendlyPlayers[idx];
  		def pRef := gRef<-localPlayer()@TwoWay;
