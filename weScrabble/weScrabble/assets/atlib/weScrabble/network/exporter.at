@@ -1,24 +1,17 @@
 // exporter.at
 // Mathijs Saey
-// The import module is responsible for broadcasting data about the current game
+// The export module is responsible for broadcasting data about the current game
 
 import /.weScrabble.listener;
 import /.weScrabble.local.game;
 import /.weScrabble.local.team;
-
-// List all the game updates that have
-// to trigger a new export here.
-def gameUpdateSymbols := [
-	`addTeam, 
-	`updateTeams, 
-	`addPlayer
-	];
 
 /************
  * Exporter *
  ************/
 
 def exporter := object: { 
+	def subscription;
 	def game;
 
 	 def init(game) {
@@ -28,32 +21,37 @@ def exporter := object: {
 
 	// Ensure export gets called on certain game methods
 	def expandMethods() {
-		foreach: { |s|
-			addListener(self.game, s, self.&export);
-		} in: gameUpdateSymbols;
+		addListener(self.game.super, `update, self.&shouldTriggerUpdate);
+		addListener(self.game.localPlayer, `resolve, self.&export);
 		nil;
+	};
+
+	// This method ensures that the game only gets
+	// exported if something changed
+	def shouldTriggerUpdate() {
+		if: (game.changeOccured) then: {
+			game.changeOccured := false;
+			self.export();
+		};
 	};
 
 	// We export an active game as a game anybody can join
 	// a normal game is exported as a game that can be used for merging.
 	def export() {
-		def subscription;
-	
+
 		// Ensure we only have one active export
 		if: subscription != nil then: {
 			subscription.cancel();
+			takeOffline: game;
 			subscription := nil;
 		};
 	
-		// Only call if the game is "dirty"
-		if: game.changeOccured then: {
-			system.println("Exporting " + self.game.name());
-			if: self.game.canJoinGame() then: {
-				subscription := export: self.game as: ActiveGame;
-			} else: {
-				subscription := export: self.game as: ResolvedGame;
-			};
-			game.changeOccured := false;
+		if: self.game.isActive() then: {
+			system.println("Exporting active " + self.game.name());
+			subscription := export: self.game as: ActiveGame;
+		} else: {
+			system.println("Exporting resolved " + self.game.name());
+			subscription := export: self.game as: ResolvedGame;
 		};
 		nil;
 	};

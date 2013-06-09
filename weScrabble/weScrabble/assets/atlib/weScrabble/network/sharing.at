@@ -1,28 +1,85 @@
 // sharing.at
 // Mathijs Saey
-// This file contains the code for exchanging letters between players
+// The sharing module is responsible for sharing letters between players
 
+import /.at.lang.futures;
 
-def share := object: { 
-	def game;
+import /.weScrabble.local.game;
+import /.weScrabble.local.team;
+import ~.scanner;
 
-	def init(game) {
-		self.game := game;
-	};
+/*********
+ * Share *
+ *********/
 
-	def requestLetter(l) {
+ def share := extend: (clone: scanner) with: {
+ 	def friendlyPlayers := [];
+ 	def enemyPlayers := [];
 
-	};
-	def getLetters() {
+ 	def runScanner() {super^runScanner(ActiveGame)};
 
-	};
-	// This allows throwing away half of the letters
-	// to nearby players of the other team
-	def throwLetters(letters) {
+ 	def onGameConnection(gameRef) {
+ 		def futurePlayer := gameRef<-localPlayer()@TwoWay;
+ 		def futureIdx := futurePlayer<-teamIdx()@TwoWay;
+	
+	 	when: futureIdx becomes: {|teamIdx|
+	 		if: teamIdx == self.game.localPlayer.teamIdx 
+	 		then: {
+	 			system.println("friendly player discovered");
+	 			friendlyPlayers := friendlyPlayers + [gameRef];
+	 		} else: {
+	 			system.println("enemy player discovered");
+	 			enemyPlayers := enemyPlayers + [gameRef];
+	 		};
+	 	};
+ 	};
 
-	};
-};
+ 	def showLetters(idx) {
+ 		def ref := friendlyPlayers[idx];
+ 		def fut := ref<-localPlayer()@TwoWay;
+ 		fut<-letters()@TwoWay;
+ 	};
 
-object: { 
-	def share := share; 
-};
+ 	def requestLetter(idx, letter) {
+ 		def ref := friendlyPlayers[idx];
+ 		when: ref<-requestHandler()@TwoWay becomes: { |handler|
+ 			self.game.requestSender.send(
+ 				handler, 
+ 				{takeLetter(idx, letter)},
+ 				self.game.localPlayer.name + " requests " + letter);
+ 		}
+ 	};
+ 	def requestThrow(idx, letters) {
+ 	 	def ref := enemyPlayers[idx];
+ 		when: ref<-requestHandler()@TwoWay becomes: { |handler|
+ 			self.game.requestSender.send(
+ 				handler, 
+ 				{throwLetters(idx, letters)},
+ 				self.game.localPlayer.name + " is throwing you some letters");
+ 		}
+ 	};
+
+ 	def throwLetters(idx, letters) {
+ 		def gRef := enemyPlayers[idx];
+ 		def pRef := gRef<-localPlayer()@TwoWay; 		
+ 		pRef<-addLetters(letters);
+ 	};
+ 	def takeLetter(idx, letter) {
+ 		def gRef := friendlyPlayers[idx];
+ 		def pRef := gRef<-localPlayer()@TwoWay;
+ 		def futureLetter := pRef<-takeLetter(letter)@TwoWay;
+ 		when: futureLetter becomes: { |l|
+ 			if: l != nil then: {
+ 				self.game.localPlayer.addLetters([l]);
+ 			};
+ 		}
+ 	};
+ };
+
+/***************
+ * Export List *
+ ***************/
+
+ object: { 
+ 	def share := share; 
+ };

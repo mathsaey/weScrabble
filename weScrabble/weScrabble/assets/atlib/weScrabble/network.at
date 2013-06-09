@@ -1,9 +1,0 @@
-
-/**
-TODO: 
-	structuur:
-		- importer file die instaat om games te zoeken als geen game actief is
-		- exporter die huidige spel altijd uitzend voor joinen
-		- merger die andere spellen met zelfde id zoekt en merget
-*/
-

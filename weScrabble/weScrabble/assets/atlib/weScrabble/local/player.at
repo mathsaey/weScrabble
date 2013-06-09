@@ -8,12 +8,6 @@ import /.at.support.util;
 import ~.constants;
 import ~.dictionary;
 
-// Type tags assigned to the different
-// player objects
-deftype Player;
-deftype ActivePlayer <: Player;
-deftype ResolvedPlayer <: Player;
-
 /*********************
  * Utility Functions *
  *********************/
@@ -46,63 +40,70 @@ def getThrowLetters(word) {
 	res;
 };
 
+
 // Create an empty rack
 def createRack() {[]};
 // Adds a letter to the rack (a table)
 def addLetter(letter, rack) {
 	rack := rack + [letter];
 };
+// returns a new table without the element at idx
+def removeElement(table, idx) {
+	table[idx] := "_";
+	def res := table.filter: { |l|
+		l != "_"
+	};
+};
 
 /**********
  * Player *
  **********/
 
-/*
- A player object represents the game state of a single player 
- of the game. 
+/**
+ An activePlayer object represents a player that is still playing
 */
-def player := object: {
-	// Name of the player 
-	def name;
-	// idx of the team the player is in.
-	def teamIdx;
+def activePlayer := object: {
+	def isActive() {true};
+};
 
-	def init(name, teamIdx) {
-		self.name := name;
-		self.teamIdx := teamIdx;
-		self;
-	};
+/**
+ A resolved player object represents a player that used all his letters
+*/
+def resolvedPlayer := object: {
+	// the resolvetime represents when the game was resolved
+	def resolveTime;
 
-	// Checks if the game can still be joined
-	// only true for active players
-	def canJoinGame() {
-		false;
-	};
-} taggedAs: [Player];
+	def isActive() {false;};
+};
 
 /**
  An activePlayer object represents a player currently still playing
  the game, on top of the regular data, it also stores the rack and letters
 */
-def activePlayer := extend: player with: {
+def player := extend: activePlayer with: {
+	// Name of the player 
+	def name;
+	// idx of the team the player is in.
+	def teamIdx;
 	// The rack is the table that contains the word being formed
 	def rack := [];
 	// The letters is a table containing the letters the player still has to use
 	def letters := [];
 
-	def init(playerName, teamIdx) {
-		super^init(playerName,teamIdx);
+	def init(name, teamIdx) {
+		self.name := name;
+		self.teamIdx := teamIdx;
 		self.rack := createRack();
 		self.letters := getRandomLetters(CONSTANTS.LETTER_AMOUNT);
 		self;
 	};
 
-	def canJoinGame() {
-		true;
+	def resolve() {
+		super := resolvedPlayer;
 	};
 
 	// Checks if the rack currently contains a valid word
-	def checkRack(rack) {
+	def checkRack() {
 		findWord: rack.implode();
 	};
 
@@ -113,48 +114,41 @@ def activePlayer := extend: player with: {
 			self.rack := [];
 			res := getThrowLetters(word);
 		};
+		if: (letters == [])
+		then: {self.resolve()};
 		res;
 	};
 
 	def moveToRack(idx) {
 		def let := letters[idx];
 		rack := rack + [let];
-		letters[idx] := "_";
-		letters := letters.filter: {
-			|l| l != "_"
-		}
+		letters := removeElement(letters, idx);
 	};
 
 	def removeLetterFromRack() {
-		def i := 0;
 		def length := rack.length;
 		def let := rack[length];
 		letters := letters + [let];
-		def rack[length - 1] {
-			i := i + 1;
-			rack[i];
+		self.rack := rack.select(1, length - 1);
+	};
+
+	def addLetters(letters) {
+		self.letters := self.letters + letters;
+	};
+	def removeLetterWithIdx(idx) {
+		self.letters := removeElement(letters, idx);
+	};
+	def takeLetter(letter) {
+		def idx := self.letters.find:{|e| e == letter};
+		def res := letter;
+		if: letter != nil then: {
+			self.removeLetterWithIdx(idx);
+		} else: {
+			res := nil;
 		};
-		self.rack := rack;
+		res;
 	};
-
-} taggedAs: [ActivePlayer];
-
-/**
- A resolved player object represents a player that used all his letters
- it is created from an active player object, and uses the same super slot.
- Resolved players can no longer participate in the game an new players cannot
- join a game through a player that already finished playing.
-*/
-def resolvedPlayer := extend: player with: {
-	// the resolvetime represents when the game was resolved
-	def resolveTime;
-
-	def init(activePlayer) {
-		super := activePlayer.super;
-		self.resolveTime := 1;
-		self;
-	};
-} taggedAs: [ResolvedPlayer];
+};
 
 /***************
  * Export List *
@@ -162,9 +156,6 @@ def resolvedPlayer := extend: player with: {
 
 object: {
 	def player := player; 
-	def Player := Player; 
 	def activePlayer := activePlayer;
-	def ActivePlayer := ActivePlayer; 
 	def resolvedPlayer := resolvedPlayer; 
-	def ResolvedPlayer := ResolvedPlayer
 };

@@ -1,48 +1,28 @@
 // merger.at
 // Mathijs Saey
-// The import module is responsible for updating both games
+// The merger module is responsible for updating both games
 // when 2 players meet each other
 
 import /.at.lang.futures;
 
 import /.weScrabble.local.game;
 import /.weScrabble.local.team;
+import ~.scanner;
 
 /**********
  * Merger *
  **********/
 
- def merger := object: { 
- 	def subscriptions := [];
- 	def id;
+ def merger := extend: (clone: scanner) with: {
+ 	def runScanner() {super^runScanner(Game)};
+ 	
+ 	def onGameConnection(gameRef) {
+ 		def futureTeams := gameRef<-teams()@TwoWay;
 
- 	def init(id) {
- 		self.id := id;
- 		self;
- 	};
-
- 	// Starts the merger
- 	// the merger will automerge with every game it discovers
- 	def runUpdater(localGame) {
- 		subscriptions := subscriptions + [
- 		whenever: Game discovered: { |game|
- 			def futureID := game<-id()@TwoWay;
-
-	 		subscriptions := subscriptions + [
- 			when: futureID becomes: {|id|
- 				if: id == localGame.id then: {
- 					def futureTeams := game<-teams()@TwoWay;
-
-	 				subscriptions := subscriptions + [
- 					when: futureTeams becomes: {|teams|
- 						system.println("merging...");
- 						foreach: { |t| system.println(" " + t.name)} in: teams;
- 						localGame.updateTeams(teams);
- 					}]
- 				};
- 			}]
- 		}];
- 		nil;
+ 		when: futureTeams becomes: {|teams|
+ 			system.println("merging...");
+ 			self.game.updateTeams(teams);
+ 		}
  	};
  };
 

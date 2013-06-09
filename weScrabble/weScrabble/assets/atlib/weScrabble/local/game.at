@@ -52,7 +52,7 @@ def game := object: {
 
 	def addPlayer(playerRef, idx) {
 		self.teams[idx].addPlayer(playerRef);
-		changeOccured := true;
+		self.update();
 	};
 
 	// Checks if any of the teams finished the game
@@ -61,8 +61,8 @@ def game := object: {
 	};
 
 	// Checks if the local player finished his/her game.
-	def canJoinGame() {
-		self.localPlayer.canJoinGame();
+	def isActive() {
+		self.localPlayer.isActive();
 	};
 
 	// Checks if 2 games are the same by matching id's
@@ -76,7 +76,7 @@ def game := object: {
 		then: {
 			raise: XMaximumTeamsReached.new("This game already has enough teams!");
 		} else: {
-			changeOccured := true;
+			self.update();
 			teams := teams + [team.new(name)];
 		};
 	};
@@ -92,8 +92,13 @@ def game := object: {
 			changeOccured.or:{self.teams[i].updateTeam(teamArray[i])};
 		};
 		if: changeOccured then: {
-			self.changeOccured := true;
+			self.update();
 		};
+	};
+
+	// This method is called when the game changed
+	def update() {
+		self.changeOccured := true;
 	};
 
 	// Generate a unique ID
@@ -104,7 +109,7 @@ def game := object: {
 		def time := /.at.support.timer.now().toString(); 
 		deviceID + "-" + time;
 	};
-} taggedAs: [Game];
+};
 
 /***************
  * Export List *

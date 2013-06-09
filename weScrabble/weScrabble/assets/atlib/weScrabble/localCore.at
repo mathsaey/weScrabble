@@ -9,15 +9,30 @@ import ~.local.team;
 import ~.local.player;
 
 import ~.network.merger;
+import ~.network.sharing;
+import ~.network.requests;
 import ~.network.exporter;
 import ~.network.importer;
 
 import /.at.lang.futures;
 
+/**************** 
+ * Network Game *
+ ****************/
+
+/**
+ A networked game is a subclass around the game class
+ that stores the extra information that might be needed
+ for some network classes.
+*/
+def networkGame := extend: game with: {
+	def requestHandler := requestHandler;
+	def requestSender := requestSender;
+};
+
 /*********
  * Core  *
  *********/
-
 
  // => in game timestamp bijhouden van laatste change
  // => listener aan kopellen via future, bij elke change reexporten
@@ -32,10 +47,7 @@ def core := object: {
 
 	// Initialises the core with the player name
 	def init(playerName) {
-		// The player that creates a game
-		// always starts on the first team
-		// the idx is modified, if the player joins a game instead
-		self.localPlayer := activePlayer.new(playerName,1);
+		self.localPlayer := player.new(playerName,1);
 		self;
 	};
 
@@ -45,14 +57,15 @@ def core := object: {
 		//def parent := jlobby.edu.vub.at.android.util.IATAndroid.getInstance().getParentActivity();
 		//def deviceID := parent.getDeviceID();
 		def deviceID := "tmp";
-		self.currentGame := game.new(gameName, teamNames, localPlayer, deviceID);
+		self.currentGame := networkGame.new(gameName, teamNames, localPlayer, deviceID);
 		self.startGame();
 	};
 
 	// Join a game (if it's in range)
 	def joinGame(gameIdx, teamIdx) {
 		localPlayer.teamIdx := teamIdx;
-		when: importer.joinGame(gameIdx, self.localPlayer) becomes: { |game|
+		when: importer.joinGame(gameIdx, self.localPlayer, networkGame) 
+		becomes: { |game|
 			currentGame := game;
 			self.startGame();
 		};
@@ -65,12 +78,7 @@ def core := object: {
 		importer.gameNames();
 	};
 
-	// Forces reexporting the game,
-	// this will cause any currently connected
-	// game to re-merge with this one.
-	def refresh() {
-		self.exportGame();
-	};
+	def getShare() {share};
 
 	/********
 	 * Util *
@@ -79,8 +87,9 @@ def core := object: {
 	// Starts the necessary services
 	// after the game has been joined/created
 	def startGame() {
-		self.runUpdater;
-		self.exportGame;
+		self.startSharing();
+		self.runUpdater();
+		self.exportGame();
 		self;
 	};
 
@@ -94,7 +103,14 @@ def core := object: {
 
 	// Looks for other games and merges with them
 	def runUpdater() {
-		merger.runUpdater(self.currentGame);
+		merger.init(currentGame);
+		merger.runScanner();
+	};
+
+	// Allows the sharing of letters
+	def startSharing() {
+		share.init(currentGame);
+		share.runScanner();
 	};
 
 	/*********

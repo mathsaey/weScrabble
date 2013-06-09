@@ -31,9 +31,9 @@ def importer := object: {
  	};
 
  	// Join game at index
- 	def joinGame(idx, localPlayer) {
+ 	def joinGame(idx, localPlayer, baseGame) {
  		def [futureGame, resGame] := makeFuture();
- 		def tmpGame := clone: game;
+ 		def tmpGame := baseGame;
  		def gameRef := games[idx];
  		tmpGame.localPlayer := localPlayer;
 
@@ -72,34 +72,26 @@ def importer := object: {
  			// When discovering a game, ensure we haven't stored it before
  			subscriptions := subscriptions + [
  			whenever: ActiveGame discovered: { |game|
- 			if:  !games.contains(game) then: {
  				def nameF := game<-name()@TwoWay;
- 				def name;
  				def idx;
 
  				when: nameF becomes: {|n|
- 					name := n;
- 					gameNames := gameNames + [name];
+ 					gameNames := gameNames + [n];
  					games := games + [game];
  					idx := games.length;
  				};
 
  				subscriptions := subscriptions + [
- 				whenever: game reconnected: {
- 					if: name != nil then: {
- 						gameNames[idx] := name;
- 					};
- 					games[idx] := game;
- 				}];
-
- 				subscriptions := subscriptions + [
- 				whenever: game disconnected: {
- 					if: name != nil then: {
- 						gameNames[idx] := gameNames[idx] + " <Disconnected>";
+ 				when: game disconnected: {
+ 					system.println("dis");
+ 					if: idx != nil then: {
  						games[idx] := 0;
+ 						gameNames[idx] := "_";
+ 						games := games.filter: {|e| !(e == 0)};
+ 						gameNames := gameNames.filter: {|e| !(e == "_")};
  					};
  				}];
- 			}}];
+ 			}];
  		};
  	};
 };
