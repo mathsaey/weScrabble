@@ -1,15 +1,18 @@
-// local.at
+// all.at
 // Mathijs Saey
 // This file is a convenience file to run all the local unit test from one point.
 
 // It's worth noting that these tests (and in fact all the tests in localTests folder)
 // only perform testing from a local point of view.
 
-// only works when the atlib is given to the shell as root folder
-// from the weScrabble folder: $ iat localTests/all.at -o root=../
+// only works when adding weScrabble as a path element
+// from the weScrabble folder: $ iat localTests/all.at -o weScrabble=.
 
-import ~.player; 	system.println("\n");
-import ~.team;		system.println("\n");
-import ~.game;		system.println("\n");
+def localTestSuite := /.at.unit.test.TestSuite.new("local tests",[
+	~.player.playerUnitTest,
+	~.game.gameUnitTest,
+	~.team.teamUnitTest
+	]);
 
+localTestSuite.runTest();
 system.exit(); // Exit iat after running the tests

@@ -42,7 +42,7 @@ public class CreateGameActivity extends Activity {
 		String[] teams= {t0,t1};
 		
 		try {
-			core.startGame(name, teams);
+			core.createGame(name, teams);
 		} catch (XAmbienttalk e) {
 			e.printStackTrace();
 			Log.e("weScrabble", "not all teams were added");

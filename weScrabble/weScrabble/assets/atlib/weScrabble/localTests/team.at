@@ -6,7 +6,7 @@
 // only perform testing from a local point of view.
 
 // only works when adding weScrabble as a path element
-// from the weScrabble folder: $ iat localTests/team.at -o root=../
+// from the weScrabble folder: $ iat localTests/team.at -o weScrabble=.
 
 import /.weScrabble.local.team;
 
@@ -69,8 +69,6 @@ def teamUnitTest := extend: /.at.unit.test.UnitTest.new("team unit test") with: 
   	self.assertTrue(t2.resolvedPlayers.contains("test 1"));
   }
 };
-
-teamUnitTest.runTest();
 
 object: { 
 	def teamUnitTest := teamUnitTest;

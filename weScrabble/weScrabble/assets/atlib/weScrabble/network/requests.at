@@ -47,6 +47,10 @@ def requestHandler := object: {
  		def req := requests[idx];
  		req.sender<-receiveAnswer(req.idx, answer);
  	};
+ 	// Used to see if a handler is reachable
+ 	def isAvailable() {
+ 		true;
+ 	};
  };
 
 /**********       

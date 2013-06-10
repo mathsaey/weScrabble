@@ -4,6 +4,7 @@
 
 import /.at.lang.types;
 import /.at.support.util;
+import /.at.support.timer;
 
 import ~.constants;
 import ~.dictionary;
@@ -55,24 +56,40 @@ def removeElement(table, idx) {
 	};
 };
 
-/**********
- * Player *
- **********/
+/*******************
+ * Resolved Player *
+ *******************/
 
 // A resolved player object represents a player that used all his letters
 def resolvedPlayer := object: {
-	def resolveTime;
+	def didTeamWin;
 	def isActive() {false;};
 };
 
+/*****************
+ * Active Player *
+ *****************/
+
 // An activePlayer object represents a player that is still playing
 def activePlayer := object: {
+
+	///////////
+	// Ivars //
+	///////////
+
 	// The rack is the table that contains the word being formed
 	def rack := [];
 	// The letters is a table containing the letters the player still has to use
 	def letters := [];
+	// The letters in this table were used but still need to be passed
+	// to the other team.
+	def pendingLetters := [];
+	// Subscription that we can use to control the timer.
+	def timerSubscription;
 
-	def isActive() {true};
+	/////////////
+	// General //
+	/////////////
 
 	// Initialise the game
 	def init() {
@@ -81,24 +98,77 @@ def activePlayer := object: {
 		self;
 	};
 
+	// Checks if there are letters left.
+	// resolves if there are none.
+	def shouldResolve() {
+		if: ((letters == []).and:{pendingLetters == [];})
+		then: {
+			self.stopTimer(); 
+			self.resolve()
+		};
+	};
+
+	def isActive() {true};
+
+	///////////
+	// Timer //
+	///////////
+
+	// Automatically adds a block after a minute
+	// of inactivity. Is cancelled by
+	def setTimer() {
+		if: timerSubscription != nil then: {
+			timerSubscription.cancel();
+		};
+		timerSubscription := whenever: minutes(5) elapsed: {
+			self.letters := self.letters + [getRandomLetter()];
+		}
+	};
+
+	// Should be called when the timer has 
+	// to be stopped completly (when resolving)
+	def stopTimer() {
+		if: timerSubscription != nil then: {
+			timerSubscription.cancel();
+		};
+	};
+
+	///////////
+	// Racks //
+	///////////
+
 	// Checks if the rack currently contains a valid word
 	def checkRack() {
 		findWord: rack.implode();
 	};
 
 	// Remove the letters in the rack from the game
-	// if they contain a valid word. Return the letters
-	// to throw to the other team
+	// if they contain a valid word. 
 	def emptyRack() {
-		def res := false;
 		if: (self.checkRack()) then: {
+			self.setTimer();
 			def word := self.rack;
 			self.rack := [];
-			res := getThrowLetters(word);
+			self.addPending(getThrowLetters(word));
 		};
-		if: (letters == [])
-		then: {self.resolve()};
-		res;
+		self.shouldResolve();
+		nil;
+	};
+
+	// Adds letters to the pending
+	// letters table
+	def addPending(letters) {
+		pendingLetters := pendingLetters + letters;
+	};
+	// Removes the pending letters
+	def flushPending() {
+		pendingLetters := [];
+	};
+	// Adds the pending leters to the letters
+	// when they can't be thrown
+	def returnPending() {
+		letters := letters + pendingLetters;
+		self.flushPending();
 	};
 
 	// Move a letter to the rack
@@ -135,9 +205,14 @@ def activePlayer := object: {
 		} else: {
 			res := nil;
 		};
+		shouldResolve();
 		res;
 	};
 };
+
+/**********
+ * Player *
+ **********/
 
 // Represents a player, the state is determined by it's super slot
 def player := extend: activePlayer with: {

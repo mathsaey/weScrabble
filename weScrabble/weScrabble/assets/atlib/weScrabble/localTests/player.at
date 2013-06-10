@@ -42,19 +42,17 @@ def playerUnitTest := extend: /.at.unit.test.UnitTest.new("player unit test") wi
 		testPlayer.rack := ["m","a","t","h","i","j","s"];
 		self.assertFalse(testPlayer.checkRack());
 		testPlayer.rack := ["t","r","u","e"];
-		self.assertTrue(testPlayer.emptyRack().length >= 1);
+		testPlayer.emptyRack();
+		self.assertTrue(testPlayer.pendingLetters.length >= 1);
 	};
 
 	def testMove() {
 		testPlayer.moveToRack(1);
 		self.assertTrue(testPlayer.rack.length = 1);
-		self.assertFalse(testPlayer.emptyRack());
 		testPlayer.removeLetterFromRack();
 		self.assertTrue(testPlayer.rack.length = 0);
 	};
 };
-
-playerUnitTest.runTest();
 
 object: { 
 	def playerUnitTest := playerUnitTest;

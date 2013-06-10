@@ -26,8 +26,7 @@ import /.at.lang.futures;
  for some network classes.
 */
 def networkGame := extend: game with: {
-	def requestHandler := requestHandler;
-	def requestSender := requestSender;
+	def requestHandler := requestHandler.new();
 };
 
 /*********
@@ -53,10 +52,7 @@ def core := object: {
 
 	// Start a new game
 	def createGame(gameName, teamNames) {
-		// Use the device id as unique identifier.
-		//def parent := jlobby.edu.vub.at.android.util.IATAndroid.getInstance().getParentActivity();
-		//def deviceID := parent.getDeviceID();
-		def deviceID := "tmp";
+		def deviceID := localPlayer.name;
 		self.currentGame := networkGame.new(gameName, teamNames, localPlayer, deviceID);
 		self.startGame();
 	};
@@ -66,8 +62,10 @@ def core := object: {
 		localPlayer.teamIdx := teamIdx;
 		when: importer.joinGame(gameIdx, self.localPlayer, networkGame) 
 		becomes: { |game|
-			currentGame := game;
-			self.startGame();
+			if: game != nil then: {
+				currentGame := game;
+				self.startGame();	
+			};
 		};
 		nil;
 	};
@@ -78,8 +76,6 @@ def core := object: {
 		importer.gameNames();
 	};
 
-	def getShare() {share};
-
 	/********
 	 * Util *
 	 ********/
@@ -87,47 +83,23 @@ def core := object: {
 	// Starts the necessary services
 	// after the game has been joined/created
 	def startGame() {
-		share.init(currentGame);
+		share.init(currentGame, requestSender.new());
 		merger.init(currentGame);
 		exporter.init(currentGame);
 		self;
 	};
 
-	/*********
-	 * Debug *
-	 *********/
+	// Used to get external access to share and exporter
+	// Mainly used for testing.
+	def getShare() {share};
+	def getExport() {exporter};
 
-	def exD() {
-		self.init("Mathijs");
-		self.createGame("Awesome game", ["FUCK YEAH MATHIJS", "ander team"]);
-	};
-	def inD(name) {
-		self.init(name);
-		self.getGameNames();
-	};
-
-	def dGetPlayers() {
-		system.println(currentGame.teams[1].activePlayers);
-		system.println(currentGame.teams[2].activePlayers);
-	};
-
-	def dGetNames(team) {
- 		foreach: { |p|
- 			 def fut := p<-name()@TwoWay;
- 			 when: fut becomes: { |n|
- 			 	system.println(n);
- 			 }
- 		} in: team.activePlayers;
- 	};
 };
-
-// Debug
-network.online();
 
 /***************
  * Export List *
  ***************/
-
+network.online();
 object: { 
 	def core := core; 
 };

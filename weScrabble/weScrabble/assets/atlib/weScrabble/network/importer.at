@@ -9,6 +9,8 @@ import /.weScrabble.local.game;
 import /.weScrabble.local.team;
 import /.weScrabble.local.player;
 
+deftype IndexOutOfBounds <: lobby.at.lang.types.Exception;
+
 /************       
  * Importer *
  ************/
@@ -29,31 +31,46 @@ def importer := object: {
  	// Join game at index
  	def joinGame(idx, localPlayer, baseGame) {
  		def [futureGame, resGame] := makeFuture();
- 		def tmpGame := baseGame;
- 		def gameRef := games[idx];
- 		tmpGame.localPlayer := localPlayer;
+ 		try: {
+ 			def tmpGame := baseGame;
+ 			def gameRef := games[idx];
+ 			tmpGame.localPlayer := localPlayer;
 
- 		// Get some data about the remote game
- 		def futureID := gameRef<-id()@TwoWay;
- 		def futureName := gameRef<-name()@TwoWay;
- 		def futureTeams := gameRef<-teams()@TwoWay;
+ 			// Get some data about the remote game
+ 			def futureID := gameRef<-id()@Due(seconds(3));
+ 			def futureName := gameRef<-name()@Due(seconds(3));
+ 			def futureTeams := gameRef<-teams()@Due(seconds(3));
+ 			def futureCanJoin := gameRef<-isActive()@Due(seconds(3));
 
- 		// When resolved, insert necessary data and resolve future
- 		when: (group: [futureID, futureName, futureTeams]) becomes: { |values|
- 			def [id,n,t] := values;
- 			tmpGame.id := id;
-			tmpGame.name := n;
-			tmpGame.teams := t;
-			tmpGame.teams[localPlayer.teamIdx()].addPlayer(localPlayer);
+ 			// When resolved, insert necessary data and resolve future
+ 			when: (group: [futureID, futureName, futureTeams, futureCanJoin]) becomes: { |values|
+ 				def [id,n,t, c] := values;
+ 				tmpGame.id := id;
+				tmpGame.name := n;
+				tmpGame.teams := t;
+				tmpGame.teams[localPlayer.teamIdx()].addPlayer(localPlayer);
 
-			resGame.resolve(tmpGame);
+				// Ensure that the player didn't resolve
+				if: c then: {
+					// Add localplayer to the remote game 
+					def addF := gameRef<-addPlayer(localPlayer, localPlayer.teamIdx())@Due(seconds(3));
+					when: addF becomes: { |r|
+						// Stop looking for new games
+ 						self.endSearch();
+ 						resGame.resolve(tmpGame);
+ 					} catch: TimeoutException using: { |e|
+ 						resGame.resolve(nil);
+ 					};	
+				} else: {
+					resGame.resolve(nil);
+				};
+ 			} catch: TimeoutException using: { |e|
+ 					resGame.resolve(nil);
+ 			};
+ 		} catch: IndexOutOfBounds using: {|e|
+ 			resGame.resolve(nil);
+ 			nil;
  		};
-
- 		// Add localplayer to the remote game 
- 		gameRef<-addPlayer(localPlayer, localPlayer.teamIdx());
-
- 		// Stop looking for new games
- 		self.endSearch();
  		// Return unresolved future
  		futureGame;
  	};
@@ -79,6 +96,7 @@ def importer := object: {
  				subscriptions := subscriptions + [
  				when: game disconnected: {
  					if: idx != nil then: {
+ 						idx := games.find: {|e| e == game};
  						games[idx] := 0;
  						gameNames[idx] := "_";
  						games := games.filter: {|e| !(e == 0)};

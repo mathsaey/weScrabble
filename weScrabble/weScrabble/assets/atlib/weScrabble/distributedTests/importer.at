@@ -1,0 +1,117 @@
+// Importer.at
+// Mathijs Saey
+// This file contains the importer tests
+
+// These tests are meant to see how the importer handles partial failures 
+
+import /.at.support.timer;
+import /.at.lang.futures exclude minutes, millisec, seconds;
+
+import /.weScrabble.local.game;
+import ~.general;
+
+enableFutures(true);
+
+def importerTest := extend: generalDistributedTest.new("importer unit test") with: {
+	def importer;
+
+	def setUp() {
+		super^setUp();
+		importer := actor: {
+			def imp := /.weScrabble.network.importer.importer;
+			def player := /.weScrabble.local.player.player.new("Sample Player", 2);
+			def game := /.weScrabble.local.game.game.new(
+				"sampleGame", ["red", "blue"], self.player, "id");
+			def joinGame(idx) {
+				game := imp.joinGame(idx, self.player, self.game);
+			};
+		};
+	};
+
+	def tearDown() {
+		super^tearDown();
+		importer := nil;
+	};
+ 
+
+ 	// See if the importer manages to detect an error if the 
+ 	// exporter becomes resolved
+	def testAsyncResolve() {
+		def [fut, res] := makeFuture();
+		self.exportGame(self.core1);
+		self.importer<-imp()<-search();
+
+		when: seconds(2) elapsed: {
+			self.importer<-joinGame(1);
+			self.core1<-core()<-currentGame()<-localPlayer()<-resolve();
+
+			when: seconds(1) elapsed: {
+				def gameF := self.importer<-game();
+				when: gameF becomes: {|g|
+					self.assertTrue(g == nil);
+					res.resolve(0);
+				};
+			};
+		};
+		fut;
+	};
+
+ 	// See if the importer manages to detect an error if the 
+ 	// exporter disconnects. (the importer should return nil in that case)
+	def testAsyncConnectionDrop() {
+		def [fut, res] := makeFuture();
+		self.exportGame(self.core1);
+		self.importer<-imp()<-search();
+
+		when: seconds(2) elapsed: {
+			self.importer<-joinGame(1);
+			self.core1<-offline();
+
+			when: seconds(1) elapsed: {
+				def gameF := self.importer<-game();
+				when: gameF becomes: {|g|
+					self.assertTrue(g == nil);
+					res.resolve(0);
+				};
+			};
+		};
+		fut;
+	};
+
+	// See if the importer works correctly when
+	// no issues arise.
+	def testAsyncNoIssues() {
+		def [fut, res] := makeFuture();
+		self.exportGame(self.core1);
+
+		// Check if we can discover games
+		self.importer<-imp()<-search();
+
+		// Wait so that the game can be discovered
+		when: seconds(3) elapsed: {
+			def namesF := self.importer<-imp()<-gameNames();
+			when: namesF becomes: {|n|
+				self.assertTrue(n.length == 1);
+			};
+
+			// Join the game
+			def gameF := self.importer<-joinGame(1);
+			when: gameF becomes: {|g|
+				// See if are present in the original game
+				def lengthF := 
+					self.core1<-core()<-currentGame()
+					<-teams()<-at(2)<-activePlayers()<-length();
+
+				when: lengthF becomes: {|l|
+					self.assertTrue(l == 1);
+					res.resolve(0);
+				};
+			};
+		};
+		fut;
+	};
+};
+
+object: { 
+	def importerTest := importerTest; 
+};

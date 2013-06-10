@@ -2,11 +2,14 @@
 // Mathijs Saey
 // The sharing module is responsible for sharing letters between players
 
-import /.at.lang.futures;
+import /.at.support.timer;
+import /.at.lang.exceptions;
+import /.at.lang.futures exclude minutes, millisec, seconds;
 
+import /.weScrabble.listener;
 import /.weScrabble.local.game;
 import /.weScrabble.local.team;
-import ~.scanner;
+import /.weScrabble.network.scanner;
 
 /*********
  * Share *
@@ -15,8 +18,18 @@ import ~.scanner;
  def share := extend: (clone: scanner) with: {
  	def friendlyPlayers := [];
  	def enemyPlayers := [];
+ 	def requestSender;
 
  	def runScanner() {super^runScanner(ActiveGame)};
+
+ 	def init(game, sender) {
+ 		super^init(game);
+ 		self.requestSender := sender;
+ 		addListener(
+ 			self.game.localPlayer.super, 
+ 			`addPending, 
+ 			self.&throwPossible);
+ 	};
 
  	// Store references to known friendly and enemy players
  	def onGameConnection(gameRef) {
@@ -35,6 +48,25 @@ import ~.scanner;
 	 	};
  	};
 
+ 	// Returns a list of all reachable handlers in the table
+ 	def findHandlers(table) {
+ 		def [futRes, res] := makeFuture();
+ 		def tmpRes := [];
+ 		table.length.doTimes: {|i|
+ 			def handlerF := table[i]<-requestHandler()@TwoWay;
+ 			when: handlerF<-isAvailable()@Due(seconds(2)) becomes: { |b|
+ 				tmpRes := tmpRes + [i];
+ 			}
+ 			catch: TimeoutException using: {|e|
+ 				// Just ignore this handler if it didn't reply
+ 			};
+ 		};
+ 		when: seconds(2) elapsed: {
+ 			res.resolve(tmpRes);
+ 		};
+ 		futRes;
+ 	};
+
  	// fetch the letters of a remote friendly
  	def showLetters(idx) {
  		def ref := friendlyPlayers[idx];
@@ -42,34 +74,60 @@ import ~.scanner;
  		fut<-letters()@TwoWay;
  	};
 
+	///////////////
+	// Throwing //
+	//////////////
+
+ 	// Attempts to throw letters 
+ 	// to any enemy player
+	def throwPossible() {
+		def F := findHandlers(enemyPlayers);
+		when: F becomes: {|h|
+			if: h == [] then: {
+				game.localPlayer.returnPending();
+			} else: {
+				self.requestThrow(h[1]);
+			};
+		};
+	};
+
+ 	// request throwing letters to enemy players
+ 	def requestThrow(idx) {
+ 	 	def ref := enemyPlayers[idx];
+ 		when: ref<-requestHandler()@Due(seconds(3)) becomes: { |handler|
+ 			self.requestSender.send(
+ 				handler, 
+ 				{throwLetters(idx)},
+ 				self.game.localPlayer.name + " threw you some letters!");
+ 		} catch: TimeoutException using: { |e|
+ 			game.localPlayer.returnPending();
+ 		};
+ 	};
+
+ 	// Throws letter to enemy player at idx
+ 	def throwLetters(idx) {
+ 		def gRef := enemyPlayers[idx];
+ 		def pRef := gRef<-localPlayer()@TwoWay; 
+ 		def letters := game.localPlayer.pendingLetters;		
+ 		pRef<-addLetters(letters);
+ 		game.localPlayer.flushPending();
+ 	};
+
+ 	/////////////
+	// Lending //
+	/////////////
+
  	// request a letter from a friendly player
  	def requestLetter(idx, letter) {
  		def ref := friendlyPlayers[idx];
  		when: ref<-requestHandler()@TwoWay becomes: { |handler|
- 			self.game.requestSender.send(
+ 			self.requestSender.send(
  				handler, 
  				{takeLetter(idx, letter)},
  				self.game.localPlayer.name + " requests " + letter);
- 		}
+ 		};
  	};
 
- 	// request throwing letters to enemy players
- 	def requestThrow(idx, letters) {
- 	 	def ref := enemyPlayers[idx];
- 		when: ref<-requestHandler()@TwoWay becomes: { |handler|
- 			self.game.requestSender.send(
- 				handler, 
- 				{throwLetters(idx, letters)},
- 				self.game.localPlayer.name + " is throwing you some letters");
- 		}
- 	};
-
- 	// Throws letter to enemy player at idx
- 	def throwLetters(idx, letters) {
- 		def gRef := enemyPlayers[idx];
- 		def pRef := gRef<-localPlayer()@TwoWay; 		
- 		pRef<-addLetters(letters);
- 	};
  	// Takes a letter from a friendly player 
  	// and add it to the rack
  	def takeLetter(idx, letter) {

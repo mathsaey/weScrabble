@@ -41,7 +41,7 @@ def team := isolate: {
 	// Resolve a player.
 	def resolvePlayer(player) {
 		resolvedPlayers := resolvedPlayers + [player];
-		activePlayers := activePlayers.filter:{|p| p != player};
+		activePlayers := activePlayers.filter:{|p| !(p == player)};
 		self;
 	};
 

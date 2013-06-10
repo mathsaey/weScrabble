@@ -44,7 +44,4 @@ public class JoinGameActivity extends Activity {
 		}
 		adapter.notifyDataSetChanged();
 	}
-
-	
-
 }

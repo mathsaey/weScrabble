@@ -1,0 +1,109 @@
+// General.at
+// Mathijs Saey
+// This file contains the general distributed test
+
+// This test implements some basic set up, to make it easier to get the 
+// different actors going.
+
+import /.at.support.timer;
+import /.at.lang.futures exclude minutes, millisec, seconds;
+
+import /.weScrabble.local.game;
+import /.weScrabble.local.team;
+import /.weScrabble.local.player;
+
+enableFutures(true);
+
+def generalDistributedTest := extend:  /.at.unit.test.UnitTest.new("Distributed unit test", false) with: {
+	def core1;
+	def core2;
+	def core3;
+	def core4;
+
+	// Don't run these tests in parallel
+	def init(name) {
+		super^init(name, false);
+	};
+
+	def setUp() {
+		super^setUp();
+		core1 := self.createCoreActor("test 1");
+		core2 := self.createCoreActor("test 2");
+		core3 := self.createCoreActor("test 3");
+		core4 := self.createCoreActor("test 4");
+	};
+
+	def tearDown() {
+		super^tearDown();
+		core1<-offline(); core1 := nil; 
+		core2<-offline(); core2 := nil; 
+		core3<-offline(); core3 := nil; 
+		core4<-offline(); core4 := nil; 
+	};
+
+	def createCoreActor(name) {
+		actor: {
+			def core := /.weScrabble.localCore.core.new(name);
+			def game := core.currentGame();
+			def player := core.localPlayer();
+
+			def offline() {
+				core.getExport().cancelExport();
+			};
+		};
+	};
+
+	// Core creates a game and exports it
+	def exportGame(core) {
+		core<-core()<-createGame("TestGame", ["red team", "blue team"]);
+	};
+
+	// Core joins a game (if he discovered one)
+	def joinGame(core, idx, team) {
+		def [fut, res] := makeFuture();
+
+		core<-core()<-getGameNames();
+
+		// Keep on joining until we manage to get in
+		def loop(res) {
+			when: seconds(1) elapsed: {
+				core<-core()<-joinGame(idx,team);
+				core<-core()<-currentGame()<-==(nil)<-ifTrue: {
+					loop(res);
+				} ifFalse: {
+					res.resolve(0);
+				};
+			};
+		};
+
+		loop(res);
+		fut;
+	};
+
+	// Core 1 will export the game, other cores will join it
+	// ech team will have 2 players
+	def exportAndJoinCores() {
+		exportGame(core1);
+		def [fut, res] := makeFuture();
+
+		def F2 := self.joinGame(core2 , 1, 1);
+
+		when: F2 becomes: { |f|
+			def F3 := self.joinGame(core3 , 1, 2);
+			when: F3 becomes: { |f|
+				def F4 := self.joinGame(core4 , 1, 2);
+				when: F4 becomes: { |f|
+					// Allow the cores to merge before we resolve them
+					when: seconds(5) elapsed: {
+						res.resolve(0);
+					};
+				};
+			};
+		};
+		fut;
+	};
+};
+
+object: { 
+	def generalDistributedTest := generalDistributedTest; 
+};

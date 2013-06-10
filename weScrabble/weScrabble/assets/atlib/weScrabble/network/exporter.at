@@ -38,17 +38,26 @@ def exporter := object: {
 		};
 	};
 
+	// Used when the game needs to be
+	// removed from the network
+	// used for testing
+	def cancelExport() {
+		if: subscription != nil then: {
+			takeOffline: game;
+			subscription.cancel();
+			subscription := nil;
+		};
+	};
+
 	// We export an active game as a game anybody can join
 	// a normal game is exported as a game that can be used for merging.
 	def export() {
-
-		// Ensure we only have one active export
 		if: subscription != nil then: {
-			subscription.cancel();
 			takeOffline: game;
+			subscription.cancel();
 			subscription := nil;
 		};
-	system.println("export triggered");
+
 		if: self.game.isActive() then: {
 			subscription := export: self.game as: ActiveGame;
 		} else: {
